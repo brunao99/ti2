@@ -1,0 +1,36 @@
+# O que NÃO sobe no `railway up`.
+#
+# Esta pasta não é um repositório git, então o .gitignore não é aplicado e o
+# Railway subia tudo — inclusive a vendor/ com 67 MB, que ele reinstala no
+# build de qualquer forma. Era o que estourava a memória do builder.
+
+# Dependências: o build roda composer install e npm install sozinho.
+/vendor
+/node_modules
+
+# Segredos e banco local.
+.env
+.env.backup
+.env.production
+database/*.sqlite
+database/*.sqlite-journal
+
+# Cache e logs: o container gera os seus.
+/storage/logs/*
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/bootstrap/cache/*.php
+/public/build
+/public/hot
+/public/storage
+
+# Ferramentas e ambiente de desenvolvimento.
+/.claude
+/.idea
+/.vscode
+.phpunit.result.cache
+/.phpunit.cache
+_ide_helper.php
+.DS_Store
+Thumbs.db
