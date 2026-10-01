@@ -29,6 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
          * o container direto — no Railway o tráfego só entra pela borda deles.
          * Numa VPS com a aplicação exposta, troque pelo IP real do proxy.
          */
+        // Quem já está logado e abre /login vai para o painel. Sem isso o
+        // Laravel manda para "/", que por sua vez mandava de volta ao login.
+        $middleware->redirectUsersTo('/painel');
+
         $middleware->trustProxies(
             at: '*',
             headers: Request::HEADER_X_FORWARDED_FOR

@@ -17,7 +17,9 @@ use Illuminate\Support\Facades\Route;
 |   Master  → tudo
 */
 
-Route::redirect('/', '/login');
+// A raiz leva cada um ao seu lugar. Um redirect fixo para /login criava um
+// loop para quem já estava logado: /login devolvia a pessoa para a raiz.
+Route::get('/', fn () => redirect()->route(auth()->check() ? 'painel.inicio' : 'login'));
 
 // ------------------------------------------------------------------- público
 Route::middleware('guest')->group(function () {
