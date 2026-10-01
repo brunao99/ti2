@@ -30,6 +30,60 @@ class PainelController extends Controller
     }
 
     /**
+     * Tela "Mais" — só existe no mobile.
+     *
+     * A barra inferior comporta três itens; o resto dos módulos vive aqui,
+     * agrupado. No desktop a barra lateral já mostra tudo, então esta tela
+     * não é usada lá.
+     *
+     * Itens sem rota são módulos ainda não construídos: aparecem apagados e
+     * marcados "em breve", em vez de sumir. Assim o grupo enxerga o que falta
+     * e ninguém procura uma tela que não existe.
+     */
+    public function mais(Request $request): View
+    {
+        $usuario = $request->user();
+
+        $grupos = [];
+
+        // Quem dispara alerta é o painel, não a prefeitura que o recebe —
+        // por isso o grupo de módulos só aparece para Master e ADM.
+        if ($usuario->podeGerenciarPostagens()) {
+            $grupos[] = [
+                'titulo' => 'Módulos',
+                'itens'  => [
+                    ['rotulo' => 'Central de alertas', 'rota' => 'alertas.index',   'desc' => 'Disparos e histórico'],
+                    ['rotulo' => 'Relatórios',         'rota' => null, 'desc' => 'Consolidado por período'],
+                    ['rotulo' => 'Modelos de mensagem', 'rota' => 'alertas.modelos', 'desc' => 'Textos padrão dos alertas'],
+                    ['rotulo' => 'Listas e contatos',   'rota' => 'alertas.listas',  'desc' => 'Quem recebe cada alerta'],
+                ],
+            ];
+        }
+
+        // Client não administra nada: o grupo inteiro some, em vez de
+        // aparecer desabilitado — mostrar o que a pessoa nunca poderá usar
+        // só gera dúvida.
+        if ($usuario->podeGerenciarUsuarios()) {
+            $grupos[] = [
+                'titulo' => 'Administração',
+                'itens'  => [
+                    ['rotulo' => 'Usuários', 'rota' => 'usuarios.index', 'desc' => 'Cadastro e permissões'],
+                    ['rotulo' => 'Contas',   'rota' => null,             'desc' => 'Prefeituras atendidas'],
+                ],
+            ];
+        }
+
+        $grupos[] = [
+            'titulo' => 'Minha conta',
+            'itens'  => [
+                ['rotulo' => 'Meu perfil', 'rota' => null, 'desc' => 'Nome, e-mail e senha'],
+            ],
+        ];
+
+        return view('painel.mais', ['grupos' => $grupos]);
+    }
+
+    /**
      * Os "insights" do ADM. Client não vê nada disso.
      */
     private function indicadores(string $mesAtual): array

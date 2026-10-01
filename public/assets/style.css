@@ -496,3 +496,87 @@ tbody tr:hover{border-left-color:var(--blue)}
   .filtro-busca .inp-box{flex:1 1 100%}
   .pill-check span{padding:.35rem .75rem;font-size:.78rem}
 }
+
+/* ---------- ordenação da listagem ---------- */
+th{padding:0}
+.th-ordem{display:flex;align-items:center;gap:.35rem;width:100%;
+  padding:.8rem .6rem;color:var(--muted);font-size:.7rem;letter-spacing:.13em;
+  text-transform:uppercase;font-weight:700;transition:.12s}
+.th-ordem:hover{color:var(--ink);background:var(--surface);text-decoration:none}
+.th-ordem.on{color:var(--blue)}
+.th-ordem .seta{font-size:.85rem;letter-spacing:0;opacity:.45}
+.th-ordem.on .seta{opacity:1}
+.th-ordem:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+
+.ordenar-mobile{margin-bottom:1.2rem}
+.ordenar-mobile .label{display:block;margin-bottom:.4rem}
+
+/* ---------- cor do título por tipo de publicação ----------
+   Cada tipo tem uma cor padrão na identidade do portal; o título a recebe
+   sozinho. No tema claro são os tons exatos da identidade. No tema escuro
+   cada um tem versão clareada — marinho, marrom e vinho originais somem
+   sobre fundo escuro. */
+:root{
+  --c-roxo:#743c7a; --c-vermelho:#b31b0e; --c-marrom:#6b2420; --c-marinho:#0e2767;
+  --c-rosa:#e87bf7; --c-verde:#469a68; --c-vinho:#7a2e4f; --c-azul:#2165ee;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --c-roxo:#c58bcc; --c-vermelho:#f0796d; --c-marrom:#d48e88; --c-marinho:#8ea6ea;
+    --c-rosa:#ee9bf9; --c-verde:#72c594; --c-vinho:#d98bab; --c-azul:#7da5f7;
+  }
+}
+:root[data-theme="dark"]{
+  --c-roxo:#c58bcc; --c-vermelho:#f0796d; --c-marrom:#d48e88; --c-marinho:#8ea6ea;
+  --c-rosa:#ee9bf9; --c-verde:#72c594; --c-vinho:#d98bab; --c-azul:#7da5f7;
+}
+
+.cor-roxo     { color:var(--c-roxo) !important }
+.cor-vermelho { color:var(--c-vermelho) !important }
+.cor-marrom   { color:var(--c-marrom) !important }
+.cor-marinho  { color:var(--c-marinho) !important }
+.cor-rosa     { color:var(--c-rosa) !important }
+.cor-verde    { color:var(--c-verde) !important }
+.cor-vinho    { color:var(--c-vinho) !important }
+.cor-azul     { color:var(--c-azul) !important }
+
+
+/* ---------- tela "Mais" (mobile) ----------
+   A barra inferior comporta três itens; os demais módulos vivem aqui,
+   agrupados por assunto em vez de numa lista solta. */
+.grupo-mais{margin-bottom:1.8rem}
+.grupo-mais .label{margin-bottom:.5rem;display:block}
+
+.lista-mais{list-style:none;border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;background:var(--surface)}
+.lista-mais li + li{border-top:1px solid var(--line)}
+
+/* Link, botão e span compartilham a mesma linha visual. */
+.lista-mais a,
+.lista-mais .inativo,
+.lista-mais button{display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  width:100%;padding:.95rem 1.1rem;text-align:left;background:none;border:0;
+  color:var(--ink);cursor:pointer;font:inherit;transition:.12s}
+.lista-mais a:hover,
+.lista-mais button:hover{background:var(--bg);text-decoration:none}
+.lista-mais b{display:block;font-weight:700;font-size:1rem}
+.lista-mais small{display:block;color:var(--muted);font-size:.84rem;margin-top:.1rem}
+.lista-mais .seta{font-size:1.4rem;color:var(--muted);line-height:1}
+
+/* Módulo ainda não construído. */
+.lista-mais .inativo{cursor:default;opacity:.5}
+.lista-mais .inativo:hover{background:none}
+.em-breve{flex:none;font-size:.62rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);border:1px solid var(--line);
+  padding:.2rem .5rem;border-radius:2px;background:var(--bg)}
+
+.lista-mais .toggle{pointer-events:none;flex:none}
+.sair-lista b{color:#c0392b}
+:root[data-theme="dark"] .sair-lista b{color:#ff9f95}
+
+/* Item de menu lateral ainda não construído. */
+.side nav .inativo{display:flex;align-items:center;justify-content:space-between;gap:.6rem;
+  padding:.85rem 1.4rem;color:rgba(255,255,255,.4);font-size:.97rem;
+  border-left:3px solid transparent;cursor:default}
+.side nav .inativo .em-breve{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);
+  color:rgba(255,255,255,.55);font-size:.55rem;padding:.15rem .4rem}

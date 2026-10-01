@@ -47,7 +47,7 @@
         <tr>
           <td><span class="tag" title="{{ $postagem->rotuloTipo() }}">{{ $postagem->rotuloTipoCurto() }}</span></td>
           <td class="t-title">
-            <a href="{{ route('postagens.show', $postagem) }}">{{ $postagem->titulo }}</a>
+            <a class="{{ $postagem->classeCor() }}" href="{{ route('postagens.show', $postagem) }}">{{ $postagem->titulo }}</a>
           </td>
           <td class="t-date">{{ $postagem->data_publicacao->format('d/m/Y') }}</td>
           <td>

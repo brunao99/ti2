@@ -26,11 +26,25 @@ class PostagemController extends Controller
 
         $busca = trim((string) $request->query('busca', ''));
 
+        [$campo, $direcao] = $this->ordenacao($request);
+
         $consulta = Postagem::query()
             ->with('autor')
             ->dosTipos($tipos)
-            ->buscando($busca)
-            ->orderByDesc('data_publicacao');
+            ->buscando($busca);
+
+        // A listagem é agrupada por mês, então a ordenação tem de respeitar
+        // isso. Ordenar por data já coloca os meses na ordem certa; para os
+        // outros campos, fixamos o mês primeiro e ordenamos dentro dele —
+        // senão publicações de meses diferentes se intercalariam e os
+        // cabeçalhos de mês apareceriam repetidos.
+        if ($campo === 'data_publicacao') {
+            $consulta->orderBy('data_publicacao', $direcao);
+        } else {
+            $consulta->orderByDesc('mes_referencia')
+                     ->orderBy($campo, $direcao)
+                     ->orderByDesc('data_publicacao');
+        }
 
         if ($request->user()->ehClient()) {
             $consulta->publicadas();
@@ -42,7 +56,35 @@ class PostagemController extends Controller
             'porMes'       => $porMes,
             'tiposAtivos'  => $tipos,
             'busca'        => $busca,
+            'ordem'        => $campo,
+            'direcao'      => $direcao,
         ]);
+    }
+
+    /**
+     * Campo e direção da ordenação, vindos da URL.
+     *
+     * A lista de permissão não é formalidade: o nome do campo entra direto no
+     * ORDER BY, e aceitar o que vier da query string seria injeção de SQL.
+     * Qualquer valor fora dela cai no padrão.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function ordenacao(Request $request): array
+    {
+        $permitidos = ['tipo', 'titulo', 'data_publicacao', 'situacao'];
+
+        $campo = (string) $request->query('ordem', 'data_publicacao');
+        if (! in_array($campo, $permitidos, true)) {
+            $campo = 'data_publicacao';
+        }
+
+        $direcao = strtolower((string) $request->query('dir', 'desc'));
+        if (! in_array($direcao, ['asc', 'desc'], true)) {
+            $direcao = 'desc';
+        }
+
+        return [$campo, $direcao];
     }
 
     public function show(Postagem $postagem, Request $request): View

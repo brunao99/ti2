@@ -34,6 +34,9 @@ Route::middleware(['auth', 'perfil'])->group(function () {
 
     Route::get('/painel', [PainelController::class, 'inicio'])->name('painel.inicio');
 
+    // Tela "Mais" da barra inferior — existe só no mobile.
+    Route::get('/mais', [PainelController::class, 'mais'])->name('painel.mais');
+
     // Leitura — os três perfis
     Route::get('/postagens', [PostagemController::class, 'index'])->name('postagens.index');
     Route::get('/postagens/{postagem}', [PostagemController::class, 'show'])

@@ -17,24 +17,30 @@ class Postagem extends Model
     /**
      * Tipos de conteúdo, iguais às seções do menu do portal.
      *
-     * Fonte única: validação, formulário, filtro e rótulo saem todos daqui.
-     * A coluna é string, não enum de banco — esta lista vai mudar conforme o
-     * portal muda, e alterar enum em MySQL exige migration a cada ajuste.
+     * Fonte única: validação, formulário, filtro, rótulo e cor saem todos
+     * daqui. A coluna é string, não enum de banco — esta lista vai mudar
+     * conforme o portal muda, e alterar enum em MySQL exige migration a cada
+     * ajuste.
      *
      * 'curto' é o que aparece na etiqueta da listagem, onde o nome inteiro
      * não caberia.
+     *
+     * 'cor' é a cor padrão do tipo na identidade do portal. O título da
+     * publicação a recebe sozinho — não há escolha no formulário nem coluna
+     * no banco. Aqui fica só o nome; o hexadecimal vive no CSS, com um tom
+     * para o tema claro e outro para o escuro.
      */
     public const TIPOS = [
-        'ministerios_programas'  => ['nome' => 'Ministérios e autarquias — Programas',                     'curto' => 'Min. programas'],
-        'ministerios_editais'    => ['nome' => 'Ministérios e autarquias — Editais',                       'curto' => 'Min. editais'],
-        'estado_programas'       => ['nome' => 'Governo do estado — Programas e ações',                    'curto' => 'Estado'],
-        'informes_cnm_amm'       => ['nome' => 'Informes CNM e AMM',                                       'curto' => 'Informes'],
-        'imprensa_midias'        => ['nome' => 'Imprensa e mídias digitais',                               'curto' => 'Imprensa'],
-        'financiamentos'         => ['nome' => 'Financiamentos',                                           'curto' => 'Financiamento'],
-        'praticas_governamentais'=> ['nome' => 'Práticas governamentais, projetos inovadores e premiações', 'curto' => 'Práticas'],
-        'parcerias_privada'      => ['nome' => 'Parcerias com iniciativa privada',                         'curto' => 'Parcerias'],
-        'seminarios_eventos'     => ['nome' => 'Seminários, cursos e eventos',                             'curto' => 'Eventos'],
-        'indices_indicadores'    => ['nome' => 'Índices e indicadores',                                    'curto' => 'Indicadores'],
+        'ministerios_programas'   => ['nome' => 'Ministérios e autarquias — Programas',                      'curto' => 'Min. programas', 'cor' => 'roxo'],
+        'ministerios_editais'     => ['nome' => 'Ministérios e autarquias — Editais',                        'curto' => 'Min. editais',   'cor' => 'vermelho'],
+        'estado_programas'        => ['nome' => 'Governo do estado — Programas e ações',                     'curto' => 'Estado',         'cor' => 'marrom'],
+        'informes_cnm_amm'        => ['nome' => 'Informes CNM e AMM',                                        'curto' => 'Informes',       'cor' => 'marinho'],
+        'imprensa_midias'         => ['nome' => 'Imprensa e mídias digitais',                                'curto' => 'Imprensa',       'cor' => 'rosa'],
+        'financiamentos'          => ['nome' => 'Financiamentos',                                            'curto' => 'Financiamento',  'cor' => 'verde'],
+        'praticas_governamentais' => ['nome' => 'Práticas governamentais, projetos inovadores e premiações', 'curto' => 'Práticas',       'cor' => 'rosa'],
+        'parcerias_privada'       => ['nome' => 'Parcerias com iniciativa privada',                          'curto' => 'Parcerias',      'cor' => 'vermelho'],
+        'seminarios_eventos'      => ['nome' => 'Seminários, cursos e eventos',                              'curto' => 'Eventos',        'cor' => 'vinho'],
+        'indices_indicadores'     => ['nome' => 'Índices e indicadores',                                     'curto' => 'Indicadores',    'cor' => 'azul'],
     ];
 
     public static function tiposValidos(): array
@@ -46,6 +52,17 @@ class Postagem extends Model
         'tipo', 'titulo', 'texto', 'data_publicacao',
         'mes_referencia', 'situacao', 'alerta_enviado', 'user_id',
     ];
+
+    /**
+     * Classe CSS que pinta o título com a cor padrão do tipo.
+     * Tipo desconhecido não recebe cor e herda a do tema.
+     */
+    public function classeCor(): string
+    {
+        $cor = self::TIPOS[$this->tipo]['cor'] ?? null;
+
+        return $cor ? 'cor-' . $cor : '';
+    }
 
     protected function casts(): array
     {

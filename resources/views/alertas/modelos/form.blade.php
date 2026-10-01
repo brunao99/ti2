@@ -20,7 +20,7 @@
     <div>
       <label class="label" for="mensagem">Mensagem</label>
       <textarea class="inp-box" id="mensagem" name="mensagem" rows="8" required>{{ old('mensagem', $modelo->mensagem) }}</textarea>
-      <p class="muted">Use <code>{{ '{{titulo}}' }}</code>, <code>{{ '{{tipo}}' }}</code> e <code>{{ '{{data_publicacao}}' }}</code> para preencher os dados da publicação.</p>
+      <p class="muted">Use <code>@{{titulo}}</code>, <code>@{{tipo}}</code> e <code>@{{data_publicacao}}</code> para preencher os dados da publicação.</p>
     </div>
 
     <div class="acts">

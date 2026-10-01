@@ -21,11 +21,19 @@
     </div>
 
     <nav>
-      <a href="{{ route('painel.inicio') }}" @class(['on' => request()->routeIs('painel.*')])>Início</a>
+      {{-- routeIs('painel.inicio') e não 'painel.*', senão a tela Mais
+           acenderia o Início junto. --}}
+      <a href="{{ route('painel.inicio') }}" @class(['on' => request()->routeIs('painel.inicio')])>Início</a>
       <a href="{{ route('postagens.index') }}" @class(['on' => request()->routeIs('postagens.*')])>Publicações</a>
+
+      @if ($eu->podeGerenciarPostagens())
+        {{-- Quem dispara alerta é o painel, não a prefeitura que recebe —
+             por isso o Client não vê este item. --}}
+        <a href="{{ route('alertas.index') }}" @class(['on' => request()->routeIs('alertas.*')])>Central de alertas</a>
+      @endif
+
       @if ($eu->podeGerenciarUsuarios())
         <a href="{{ route('usuarios.index') }}" @class(['on' => request()->routeIs('usuarios.*')])>Usuários</a>
-        <a href="{{ route('alertas.index') }}" @class(['on' => request()->routeIs('alertas.*')])>Alertas</a>
       @endif
     </nav>
 
@@ -89,16 +97,13 @@
         @include('layouts.icones.documento')
         Publicações
       </a>
-      @if ($eu->podeGerenciarUsuarios())
-        <a href="{{ route('usuarios.index') }}" @class(['on' => request()->routeIs('usuarios.*')])>
-          @include('layouts.icones.pessoa')
-          Usuários
-        </a>
-        <a href="{{ route('alertas.index') }}" @class(['on' => request()->routeIs('alertas.*')])>
-          <span aria-hidden="true">!</span>
-          Alertas
-        </a>
-      @endif
+      {{-- A barra comporta poucos itens; o resto dos módulos vive em "Mais".
+           Usuários e Alertas ficam lá dentro, por isso acendem este item. --}}
+      <a href="{{ route('painel.mais') }}"
+         @class(['on' => request()->routeIs('painel.mais') || request()->routeIs('usuarios.*') || request()->routeIs('alertas.*')])>
+        @include('layouts.icones.mais')
+        Mais
+      </a>
     </nav>
   </div>
 </div>

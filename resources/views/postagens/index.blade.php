@@ -55,6 +55,29 @@
     </fieldset>
   </form>
 
+  {{-- No mobile a tabela vira cartões e o cabeçalho some, levando junto a
+       ordenação. Este seletor devolve o controle lá. Cada opção já é a URL
+       pronta, com os filtros atuais preservados. --}}
+  <div class="m-only ordenar-mobile">
+    <label class="label" for="ordenar">Ordenar por</label>
+    <select class="inp-box" id="ordenar" onchange="location.href = this.value">
+      @php
+          $opcoes = [
+              ['data_publicacao', 'desc', 'Data — mais recentes'],
+              ['data_publicacao', 'asc',  'Data — mais antigas'],
+              ['titulo',          'asc',  'Título — A a Z'],
+              ['titulo',          'desc', 'Título — Z a A'],
+              ['tipo',            'asc',  'Tipo'],
+              ['situacao',        'asc',  'Situação'],
+          ];
+      @endphp
+      @foreach ($opcoes as [$campo, $dir, $rotulo])
+        <option value="{{ request()->fullUrlWithQuery(['ordem' => $campo, 'dir' => $dir]) }}"
+                @selected($ordem === $campo && $direcao === $dir)>{{ $rotulo }}</option>
+      @endforeach
+    </select>
+  </div>
+
   @forelse ($porMes as $mes => $postagens)
     <div data-mes>
       <div class="month">
@@ -65,10 +88,10 @@
       <table>
         <thead>
           <tr>
-            <th style="width:140px">Tipo</th>
-            <th>Título</th>
-            <th style="width:120px">Data</th>
-            <th style="width:130px">Situação</th>
+            @include('postagens._cabecalho-ordenavel', ['campo' => 'tipo',            'rotulo' => 'Tipo',     'largura' => '150px'])
+            @include('postagens._cabecalho-ordenavel', ['campo' => 'titulo',          'rotulo' => 'Título',   'largura' => null])
+            @include('postagens._cabecalho-ordenavel', ['campo' => 'data_publicacao', 'rotulo' => 'Data',     'largura' => '130px'])
+            @include('postagens._cabecalho-ordenavel', ['campo' => 'situacao',        'rotulo' => 'Situação', 'largura' => '140px'])
             <th style="width:140px">Alerta</th>
             <th style="width:250px">Ações</th>
           </tr>
@@ -78,7 +101,7 @@
             <tr>
               <td><span class="tag" title="{{ $postagem->rotuloTipo() }}">{{ $postagem->rotuloTipoCurto() }}</span></td>
               <td class="t-title">
-                <a href="{{ route('postagens.show', $postagem) }}">{{ $postagem->titulo }}</a>
+                <a class="{{ $postagem->classeCor() }}" href="{{ route('postagens.show', $postagem) }}">{{ $postagem->titulo }}</a>
               </td>
               <td class="t-date">{{ $postagem->data_publicacao->format('d/m/Y') }}</td>
               <td>

@@ -38,7 +38,7 @@
           </option>
         @endforeach
       </select>
-      <p class="muted" style="margin-top:.4rem">Variáveis disponíveis: <code>{{ '{{titulo}}' }}</code>, <code>{{ '{{tipo}}' }}</code>, <code>{{ '{{data_publicacao}}' }}</code>.</p>
+      <p class="muted" style="margin-top:.4rem">Variáveis disponíveis: <code>@{{titulo}}</code>, <code>@{{tipo}}</code>, <code>@{{data_publicacao}}</code>.</p>
     </div>
 
     <div>
@@ -80,9 +80,9 @@
   function atualizar() {
     const option = select.options[select.selectedIndex];
     let mensagem = option?.dataset.mensagem || '';
-    mensagem = mensagem.replaceAll('{{titulo}}', titulo)
-      .replaceAll('{{tipo}}', tipo)
-      .replaceAll('{{data_publicacao}}', data);
+    mensagem = mensagem.replaceAll('@{{titulo}}', titulo)
+      .replaceAll('@{{tipo}}', tipo)
+      .replaceAll('@{{data_publicacao}}', data);
     preview.value = mensagem;
   }
 

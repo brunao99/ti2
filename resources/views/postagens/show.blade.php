@@ -35,7 +35,7 @@
       </span>
     </div>
 
-    <h1>{{ $postagem->titulo }}</h1>
+    <h1 class="{{ $postagem->classeCor() }}">{{ $postagem->titulo }}</h1>
 
     {{-- O HTML aqui já passou pelo SanitizadorHtml na gravação, então pode ser
          impresso sem escapar. Publicações antigas, de antes do editor, são texto

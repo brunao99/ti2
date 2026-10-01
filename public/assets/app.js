@@ -14,7 +14,8 @@
   } catch (e) {}
 
   document.addEventListener("click", function (e) {
-    var tg = e.target.closest(".toggle");
+    // .toggle e a bolinha da barra; .toggle-tema e a linha inteira na tela "Mais"
+    var tg = e.target.closest(".toggle, .toggle-tema");
     if (tg) {
       var atual = document.documentElement.getAttribute("data-theme");
       if (!atual) {

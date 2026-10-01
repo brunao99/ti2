@@ -101,6 +101,24 @@
     });
   });
 
+  // O título assume a cor padrão do tipo escolhido — a mesma que ele terá
+  // depois de publicado — para o autor ver o resultado sem precisar salvar.
+  (function () {
+    var titulo = document.getElementById('titulo');
+    var tipo = document.getElementById('tipo');
+    if (!titulo || !tipo) return;
+
+    var corDoTipo = @json(collect(\App\Models\Postagem::TIPOS)->map(fn ($t) => $t['cor']));
+
+    function aplicar() {
+      titulo.className = 'inp-box';
+      var cor = corDoTipo[tipo.value];
+      if (cor) titulo.classList.add('cor-' + cor);
+    }
+
+    tipo.addEventListener('change', aplicar);
+    aplicar();
+  })();
 </script>
 <script src="{{ asset('assets/editor.js') }}"></script>
 @endpush
