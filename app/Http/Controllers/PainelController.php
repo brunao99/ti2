@@ -55,7 +55,6 @@ class PainelController extends Controller
                     ['rotulo' => 'Central de alertas', 'rota' => 'alertas.index',   'desc' => 'Disparos e histórico'],
                     ['rotulo' => 'Relatórios',         'rota' => null, 'desc' => 'Consolidado por período'],
                     ['rotulo' => 'Modelos de mensagem', 'rota' => 'alertas.modelos', 'desc' => 'Textos padrão dos alertas'],
-                    ['rotulo' => 'Listas e contatos',   'rota' => 'alertas.listas',  'desc' => 'Quem recebe cada alerta'],
                 ],
             ];
         }
@@ -76,6 +75,7 @@ class PainelController extends Controller
         $grupos[] = [
             'titulo' => 'Minha conta',
             'itens'  => [
+                ['rotulo' => 'Alertas no WhatsApp', 'rota' => 'conta.edit', 'desc' => 'Autorizar ou parar de receber'],
                 ['rotulo' => 'Meu perfil', 'rota' => null, 'desc' => 'Nome, e-mail e senha'],
             ],
         ];

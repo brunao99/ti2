@@ -27,6 +27,7 @@
         <th style="width:160px">Usuário</th>
         <th>E-mail</th>
         <th style="width:150px">Perfil</th>
+        <th style="width:130px">Alertas</th>
         <th style="width:110px">Situação</th>
         <th style="width:190px">Ações</th>
       </tr>
@@ -38,6 +39,15 @@
           <td class="mono">{{ $usuario->usuario }}</td>
           <td class="muted">{{ $usuario->email }}</td>
           <td><span class="tag">{{ $usuario->rotuloPerfil() }}</span></td>
+          <td class="muted" title="{{ $usuario->telefone ? $usuario->telefoneFormatado() : '' }}">
+            @if ($usuario->autorizouAlertas())
+              Recebe
+            @elseif ($usuario->telefone)
+              Não autorizou
+            @else
+              Sem telefone
+            @endif
+          </td>
           <td>
             <span class="badge {{ $usuario->ativo ? 'badge-ok' : 'badge-draft' }}">
               {{ $usuario->ativo ? 'Ativo' : 'Inativo' }}
@@ -63,7 +73,7 @@
           </td>
         </tr>
       @empty
-        <tr><td colspan="6" class="muted">Nenhum usuário cadastrado.</td></tr>
+        <tr><td colspan="7" class="muted">Nenhum usuário cadastrado.</td></tr>
       @endforelse
     </tbody>
   </table>

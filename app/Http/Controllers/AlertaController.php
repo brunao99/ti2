@@ -2,24 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AlertContact;
 use App\Models\AlertDispatch;
 use App\Models\AlertDispatchRecipient;
-use App\Models\AlertList;
 use App\Models\AlertTemplate;
 use App\Models\Postagem;
+use App\Models\User;
 use App\Services\Alertas\AlertSender;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AlertaController extends Controller
 {
     public function index(): View
     {
-        $disparos = AlertDispatch::with(['postagem', 'modelo', 'lista', 'administrador'])
+        $disparos = AlertDispatch::with(['postagem', 'modelo', 'administrador'])
             ->latest()
             ->get();
 
@@ -34,7 +32,7 @@ class AlertaController extends Controller
         return view('alertas.enviar', [
             'postagem' => $postagem,
             'modelos' => AlertTemplate::orderBy('nome')->get(),
-            'listas' => AlertList::withCount(['contatos', 'contatos as consentidos_count' => fn ($q) => $q->where('consentimento', true)])->orderBy('nome')->get(),
+            'destinatarios' => User::alcancaveisPorAlerta()->orderBy('nome')->get(),
         ]);
     }
 
@@ -45,7 +43,6 @@ class AlertaController extends Controller
 
         $dados = $request->validate([
             'alert_template_id' => ['required', 'exists:alert_templates,id'],
-            'alert_list_id' => ['required', 'exists:alert_lists,id'],
         ]);
 
         return redirect()
@@ -60,30 +57,30 @@ class AlertaController extends Controller
 
         $dados = $request->validate([
             'alert_template_id' => ['required', 'exists:alert_templates,id'],
-            'alert_list_id' => ['required', 'exists:alert_lists,id'],
         ]);
 
         $modelo = AlertTemplate::findOrFail($dados['alert_template_id']);
-        $lista = AlertList::with('contatos')->findOrFail($dados['alert_list_id']);
 
-        $contatos = $lista->contatos;
-        $aptos = $contatos->where('consentimento', true)->values();
+        // Destinatário é usuário do sistema: conta ativa com telefone. Quem
+        // não autorizou entra no histórico como "ignorado", para o ADM ver
+        // quem ficou de fora e por quê.
+        $usuarios = User::alcancaveisPorAlerta()->orderBy('nome')->get();
+        $aptos = $usuarios->filter->autorizouAlertas()->values();
 
         if ($aptos->isEmpty()) {
             return back()->withErrors([
-                'alerta' => 'A lista não possui contatos com consentimento de recebimento.',
+                'alerta' => 'Nenhum usuário autorizou receber alertas. A autorização é feita por cada um, na tela Minha conta.',
             ])->withInput();
         }
 
         $mensagem = $this->montarMensagem($modelo->mensagem, $postagem);
 
         $disparo = DB::transaction(function () use (
-            $postagem, $modelo, $lista, $aptos, $contatos, $mensagem, $request, $sender
+            $postagem, $modelo, $aptos, $usuarios, $mensagem, $request, $sender
         ) {
             $disparo = AlertDispatch::create([
                 'postagem_id' => $postagem->id,
                 'alert_template_id' => $modelo->id,
-                'alert_list_id' => $lista->id,
                 'user_id' => $request->user()->id,
                 'mensagem' => $mensagem,
                 'status' => 'sucesso',
@@ -95,20 +92,20 @@ class AlertaController extends Controller
             $enviados = 0;
             $falhas = 0;
 
-            foreach ($contatos as $contato) {
-                if (! $contato->consentimento) {
+            foreach ($usuarios as $usuario) {
+                if (! $usuario->autorizouAlertas()) {
                     AlertDispatchRecipient::create([
                         'alert_dispatch_id' => $disparo->id,
-                        'alert_contact_id' => $contato->id,
-                        'nome' => $contato->nome,
-                        'telefone' => $contato->telefone,
+                        'user_id' => $usuario->id,
+                        'nome' => $usuario->nome,
+                        'telefone' => $usuario->telefone,
                         'status' => 'ignorado',
-                        'resultado' => 'Sem consentimento de recebimento.',
+                        'resultado' => 'Não autorizou receber alertas.',
                     ]);
                     continue;
                 }
 
-                $resultado = $sender->send($contato->telefone, $mensagem);
+                $resultado = $sender->send($usuario->telefone, $mensagem);
 
                 if ($resultado['status'] === 'enviado') {
                     $enviados++;
@@ -118,9 +115,9 @@ class AlertaController extends Controller
 
                 AlertDispatchRecipient::create([
                     'alert_dispatch_id' => $disparo->id,
-                    'alert_contact_id' => $contato->id,
-                    'nome' => $contato->nome,
-                    'telefone' => $contato->telefone,
+                    'user_id' => $usuario->id,
+                    'nome' => $usuario->nome,
+                    'telefone' => $usuario->telefone,
                     'status' => $resultado['status'],
                     'resultado' => $resultado['resultado'],
                 ]);
@@ -168,81 +165,9 @@ class AlertaController extends Controller
         return redirect()->route('alertas.modelos')->with('ok', 'Modelo de mensagem salvo.');
     }
 
-    public function listas(): View
-    {
-        return view('alertas.listas.index', [
-            'listas' => AlertList::withCount(['contatos', 'contatos as consentidos_count' => fn ($q) => $q->where('consentimento', true)])->orderBy('nome')->get(),
-        ]);
-    }
-
-    public function criarLista(): View
-    {
-        return view('alertas.listas.form', [
-            'lista' => new AlertList(),
-            'contatos' => AlertContact::orderBy('nome')->get(),
-        ]);
-    }
-
-    public function salvarLista(Request $request, ?AlertList $lista = null): RedirectResponse
-    {
-        $dados = $request->validate([
-            'nome' => ['required', 'string', 'max:120'],
-            'descricao' => ['nullable', 'string', 'max:500'],
-            'contatos' => ['nullable', 'array'],
-            'contatos.*' => ['integer', 'exists:alert_contacts,id'],
-        ]);
-
-        $contatos = $dados['contatos'] ?? [];
-        unset($dados['contatos']);
-
-        if ($lista) {
-            $lista->update($dados);
-        } else {
-            $lista = AlertList::create($dados);
-        }
-
-        $lista->contatos()->sync($contatos);
-
-        return redirect()->route('alertas.listas')->with('ok', 'Lista de destinatários salva.');
-    }
-
-    public function contatos(): View
-    {
-        return view('alertas.contatos.index', [
-            'contatos' => AlertContact::withCount('listas')->orderBy('nome')->get(),
-        ]);
-    }
-
-    public function criarContato(): View
-    {
-        return view('alertas.contatos.form', ['contato' => new AlertContact()]);
-    }
-
-    public function salvarContato(Request $request, ?AlertContact $contato = null): RedirectResponse
-    {
-        $dados = $request->validate([
-            'nome' => ['required', 'string', 'max:120'],
-            'telefone' => ['required', 'string', 'max:30'],
-            'consentimento' => ['boolean'],
-        ]);
-
-        $dados['consentimento'] = $request->boolean('consentimento');
-
-        $contato ? $contato->update($dados) : AlertContact::create($dados);
-
-        return redirect()->route('alertas.contatos')->with('ok', 'Contato salvo.');
-    }
-
-    public function removerContato(AlertContact $contato): RedirectResponse
-    {
-        $contato->delete();
-
-        return redirect()->route('alertas.contatos')->with('ok', 'Contato removido.');
-    }
-
     public function show(AlertDispatch $disparo): View
     {
-        $disparo->load(['postagem', 'modelo', 'lista', 'administrador', 'destinatarios']);
+        $disparo->load(['postagem', 'modelo', 'administrador', 'destinatarios']);
 
         return view('alertas.show', compact('disparo'));
     }

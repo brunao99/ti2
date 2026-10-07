@@ -42,6 +42,21 @@
     </div>
 
     <div class="field">
+      <label class="label" for="telefone">WhatsApp</label>
+      <input class="inp-box" id="telefone" name="telefone" type="tel" inputmode="tel"
+             placeholder="(31) 99999-0001"
+             value="{{ old('telefone', $usuario->telefone ? $usuario->telefoneFormatado() : '') }}">
+      <p class="muted" style="font-size:.85rem;margin-top:.3rem">
+        @if ($editando && $usuario->autorizouAlertas())
+          Autorizou receber alertas em {{ $usuario->alerta_consentimento_em->format('d/m/Y') }}.
+          Se o número mudar, a pessoa precisa autorizar de novo.
+        @else
+          Número que recebe os alertas. Só recebe depois que a própria pessoa autorizar, em Minha conta.
+        @endif
+      </p>
+    </div>
+
+    <div class="field">
       <label class="label" for="password">Senha</label>
       <input class="inp-box" id="password" name="password" type="password"
              autocomplete="new-password" @required(! $editando)>

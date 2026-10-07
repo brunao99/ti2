@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ContaController;
 use App\Http\Controllers\PainelController;
 use App\Http\Controllers\PostagemController;
 use App\Http\Controllers\UsuarioController;
@@ -38,6 +39,10 @@ Route::middleware(['auth', 'perfil'])->group(function () {
 
     // Tela "Mais" da barra inferior — existe só no mobile.
     Route::get('/mais', [PainelController::class, 'mais'])->name('painel.mais');
+
+    // Minha conta — cada um decide se recebe alertas por WhatsApp.
+    Route::get('/minha-conta', [ContaController::class, 'edit'])->name('conta.edit');
+    Route::put('/minha-conta', [ContaController::class, 'update'])->name('conta.update');
 
     // Leitura — os três perfis
     Route::get('/postagens', [PostagemController::class, 'index'])->name('postagens.index');
@@ -79,24 +84,4 @@ Route::middleware(['auth', 'perfil:master,adm'])->group(function () {
     Route::get('/alertas/modelos/{modelo}/editar', fn (\App\Models\AlertTemplate $modelo) => view('alertas.modelos.form', compact('modelo')))
         ->name('alertas.modelos.editar');
     Route::put('/alertas/modelos/{modelo}', [AlertaController::class, 'salvarModelo'])->name('alertas.modelos.atualizar');
-
-    Route::get('/alertas/listas', [AlertaController::class, 'listas'])->name('alertas.listas');
-    Route::get('/alertas/listas/nova', [AlertaController::class, 'criarLista'])->name('alertas.listas.nova');
-    Route::post('/alertas/listas', [AlertaController::class, 'salvarLista'])->name('alertas.listas.salvar');
-    Route::get('/alertas/listas/{lista}/editar', function (\App\Models\AlertList $lista) {
-        $lista->load('contatos');
-        return view('alertas.listas.form', [
-            'lista' => $lista,
-            'contatos' => \App\Models\AlertContact::orderBy('nome')->get(),
-        ]);
-    })->name('alertas.listas.editar');
-    Route::put('/alertas/listas/{lista}', [AlertaController::class, 'salvarLista'])->name('alertas.listas.atualizar');
-
-    Route::get('/alertas/contatos', [AlertaController::class, 'contatos'])->name('alertas.contatos');
-    Route::get('/alertas/contatos/novo', [AlertaController::class, 'criarContato'])->name('alertas.contatos.novo');
-    Route::post('/alertas/contatos', [AlertaController::class, 'salvarContato'])->name('alertas.contatos.salvar');
-    Route::get('/alertas/contatos/{contato}/editar', fn (\App\Models\AlertContact $contato) => view('alertas.contatos.form', compact('contato')))
-        ->name('alertas.contatos.editar');
-    Route::put('/alertas/contatos/{contato}', [AlertaController::class, 'salvarContato'])->name('alertas.contatos.atualizar');
-    Route::delete('/alertas/contatos/{contato}', [AlertaController::class, 'removerContato'])->name('alertas.contatos.remover');
 });

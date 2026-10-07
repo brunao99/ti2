@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Support\Telefone;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -16,7 +18,10 @@ class User extends Authenticatable
     public const ADM    = 'adm';
     public const CLIENT = 'client';
 
-    protected $fillable = ['nome', 'usuario', 'email', 'password', 'perfil', 'ativo'];
+    // alerta_consentimento_em fica de fora de propósito: só a própria pessoa
+    // autoriza, pela tela Minha conta. Assim nenhum formulário do ADM consegue
+    // marcar o consentimento por ela, nem editando o HTML.
+    protected $fillable = ['nome', 'usuario', 'email', 'password', 'perfil', 'ativo', 'telefone'];
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -25,12 +30,31 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'ativo'    => 'boolean',
+            'alerta_consentimento_em' => 'datetime',
         ];
     }
 
     public function postagens(): HasMany
     {
         return $this->hasMany(Postagem::class);
+    }
+
+    // ---------------------------------------------------------------- alertas
+
+    /** Quem entra num disparo: conta ativa e com telefone cadastrado. */
+    public function scopeAlcancaveisPorAlerta(Builder $query): Builder
+    {
+        return $query->where('ativo', true)->whereNotNull('telefone');
+    }
+
+    public function autorizouAlertas(): bool
+    {
+        return $this->telefone !== null && $this->alerta_consentimento_em !== null;
+    }
+
+    public function telefoneFormatado(): string
+    {
+        return Telefone::formatar($this->telefone);
     }
 
     // ---------------------------------------------------------------- perfis

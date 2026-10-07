@@ -16,7 +16,7 @@
 
     <h1>{{ $disparo->postagem->titulo }}</h1>
     <p class="muted">
-      Modelo: {{ $disparo->modelo->nome }} · Lista: {{ $disparo->lista->nome }}
+      Modelo: {{ $disparo->modelo->nome }}
       · Responsável: {{ $disparo->administrador->nome }}
     </p>
 
@@ -29,19 +29,19 @@
     <p class="muted">
       {{ $disparo->total_enviados }} enviados ·
       {{ $disparo->total_falhas }} falhas ·
-      {{ $disparo->destinatarios->where('status', 'ignorado')->count() }} ignorados sem consentimento
+      {{ $disparo->destinatarios->where('status', 'ignorado')->count() }} ignorados por não terem autorizado
     </p>
   </article>
 
   <table style="margin-top:1rem">
     <thead>
-      <tr><th>Contato</th><th>Telefone</th><th>Status</th><th>Resultado</th></tr>
+      <tr><th>Usuário</th><th>Telefone</th><th>Status</th><th>Resultado</th></tr>
     </thead>
     <tbody>
       @foreach ($disparo->destinatarios as $destinatario)
         <tr>
           <td>{{ $destinatario->nome }}</td>
-          <td>{{ $destinatario->telefone }}</td>
+          <td class="mono">{{ \App\Support\Telefone::formatar($destinatario->telefone) }}</td>
           <td>{{ ucfirst($destinatario->status) }}</td>
           <td class="muted">{{ $destinatario->resultado }}</td>
         </tr>
