@@ -22,6 +22,10 @@ sem instalar banco nenhum.
 
 As contas de acesso são criadas pela própria migration, então `migrate` basta.
 
+Enquanto não houver MySQL, as migrations originais ainda são editadas direto
+(o banco do Railway nasce do zero a cada deploy). Se o seu banco local der
+erro de coluna depois de puxar mudanças, recrie com `php artisan migrate:fresh`.
+
 ### Contas
 
 | Login | Senha | Perfil |
@@ -116,16 +120,43 @@ Cada deploy recria o banco. As contas e os exemplos voltam sempre, mas o que
 for escrito no painel se perde. Para persistir, adicionar o plugin MySQL —
 passo 2 do `RAILWAY.md`.
 
+## Alertas por WhatsApp
+
+O destinatário do alerta é sempre um **usuário do sistema**: não existe
+cadastro de contato à parte. Quem recebe é toda conta **ativa**, com
+**telefone** e que **autorizou** receber.
+
+- **Telefone**: o ADM cadastra no formulário de usuário (ou a própria pessoa,
+  em Minha conta). Vai para o banco só com dígitos e DDI (`5531999990001`),
+  que é o formato da API da Meta — ver `app/Support/Telefone.php`.
+- **Autorização**: só a própria pessoa dá, em **Minha conta**. Fica gravada a
+  data (`alerta_consentimento_em`), que é o que comprova o opt-in exigido
+  pela Meta. O campo não é `fillable`, então nenhum formulário do ADM
+  consegue marcá-lo, nem editando o HTML.
+- Se o ADM troca o número, a autorização cai: ela valia para o número antigo.
+- No disparo, quem tem telefone mas não autorizou aparece no histórico como
+  **ignorado**. O histórico guarda nome e telefone do momento do envio.
+
+O envio ainda é **simulado** (`SimulatedWhatsAppSender`). Antes de ligar a API
+real da Meta:
+
+1. **MySQL no Railway** — com SQLite, cada deploy apaga histórico e datas de
+   autorização, justamente a prova do opt-in.
+2. **Modelos** precisam virar templates aprovados pela Meta (variáveis
+   `{{1}}`, `{{2}}`); texto livre não é aceito para iniciar conversa.
+3. **Fila** para o envio: hoje ele acontece dentro da requisição.
+
 ## Onde está cada coisa
 
 ```
-app/Models/            User, Postagem, Anexo
-app/Http/Controllers/  Auth, Painel, Postagem, Usuario
+app/Models/            User, Postagem, Anexo, Alert* (modelo, disparo, destinatário)
+app/Http/Controllers/  Auth, Painel, Postagem, Usuario, Alerta, Conta
 app/Http/Middleware/   VerificaPerfil
-app/Support/           SanitizadorHtml
-database/migrations/   tabelas + ajuste de tipos + contas iniciais
+app/Services/Alertas/  envio do alerta (hoje simulado)
+app/Support/           SanitizadorHtml, Telefone
+database/migrations/   tabelas + ajuste de tipos + contas e dados iniciais
 database/seeders/      mesmo conteúdo, para uso local
-resources/views/       login, painel, postagens, usuários
+resources/views/       login, painel, postagens, usuários, alertas, minha conta
 public/assets/         style.css, app.js e editor.js
 routes/web.php         rotas agrupadas por permissão
 .railwayignore         o que não sobe no deploy
@@ -136,8 +167,8 @@ agrupadas justamente por quem pode acessá-las.
 
 ## O que ainda não existe
 
-- **Envio de alerta às prefeituras** — a coluna `alerta_enviado` já está no
-  banco, mas não há tela nem disparo
+- **Envio real de alerta** — telas, autorização e histórico prontos; o envio
+  em si ainda é simulado (ver *Alertas por WhatsApp*)
 - **Upload de anexos** — a tabela `anexos` existe e a visualização já lista,
   mas o formulário ainda não envia arquivo
 - **Área pública** — por ora tudo exige login

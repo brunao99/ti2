@@ -35,6 +35,8 @@
       @if ($eu->podeGerenciarUsuarios())
         <a href="{{ route('usuarios.index') }}" @class(['on' => request()->routeIs('usuarios.*')])>Usuários</a>
       @endif
+
+      <a href="{{ route('conta.edit') }}" @class(['on' => request()->routeIs('conta.*')])>Minha conta</a>
     </nav>
 
     <div class="side-user">
@@ -89,7 +91,7 @@
     </main>
 
     <nav class="botnav">
-      <a href="{{ route('painel.inicio') }}" @class(['on' => request()->routeIs('painel.*')])>
+      <a href="{{ route('painel.inicio') }}" @class(['on' => request()->routeIs('painel.inicio')])>
         @include('layouts.icones.casa')
         Início
       </a>
@@ -98,9 +100,9 @@
         Publicações
       </a>
       {{-- A barra comporta poucos itens; o resto dos módulos vive em "Mais".
-           Usuários e Alertas ficam lá dentro, por isso acendem este item. --}}
+           Usuários, Alertas e Minha conta ficam lá dentro, por isso acendem este item. --}}
       <a href="{{ route('painel.mais') }}"
-         @class(['on' => request()->routeIs('painel.mais') || request()->routeIs('usuarios.*') || request()->routeIs('alertas.*')])>
+         @class(['on' => request()->routeIs('painel.mais') || request()->routeIs('usuarios.*') || request()->routeIs('alertas.*') || request()->routeIs('conta.*')])>
         @include('layouts.icones.mais')
         Mais
       </a>

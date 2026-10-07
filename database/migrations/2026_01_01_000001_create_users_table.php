@@ -16,6 +16,15 @@ return new class extends Migration
             $table->string('password');
             $table->enum('perfil', ['master', 'adm', 'client'])->default('client');
             $table->boolean('ativo')->default(true);  // conta inativa = Tela 03
+
+            // WhatsApp dos alertas, só dígitos com DDI (5531999990001) — o
+            // formato que a API da Meta exige. Ver App\Support\Telefone.
+            $table->string('telefone', 20)->nullable();
+
+            // Data em que a própria pessoa autorizou receber alertas, na tela
+            // Minha conta. Nulo = não recebe. Fica a data, não um sim/não,
+            // porque é ela que comprova o opt-in que a Meta exige.
+            $table->timestamp('alerta_consentimento_em')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

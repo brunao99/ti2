@@ -10,6 +10,15 @@
   {{-- Criar postagem é ação da tela de Publicações, não daqui. --}}
   <h1>{{ $saudacao }}, {{ explode(' ', auth()->user()->nome)[0] }}</h1>
 
+  {{-- O alerta só chega a quem autorizou, e só a própria pessoa autoriza.
+       Sem este aviso, quase ninguém acharia a tela Minha conta sozinho. --}}
+  @unless (auth()->user()->autorizouAlertas())
+    <p class="note">
+      Quer ser avisado no WhatsApp quando sair uma publicação nova?
+      <a href="{{ route('conta.edit') }}">Ative os alertas em Minha conta</a>.
+    </p>
+  @endunless
+
   {{-- Insights: só Master e ADM. O Client não recebe nem os números. --}}
   @if ($indicadores)
     <div class="kpis">

@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('postagem_id')->constrained('postagens');
             $table->foreignId('alert_template_id')->constrained('alert_templates');
-            $table->foreignId('alert_list_id')->constrained('alert_lists');
             $table->foreignId('user_id')->constrained('users');
             $table->text('mensagem');
             $table->enum('status', ['sucesso', 'parcial', 'falha']);

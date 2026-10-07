@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AlertDispatchRecipient extends Model
 {
     protected $fillable = [
-        'alert_dispatch_id', 'alert_contact_id', 'nome', 'telefone', 'status', 'resultado',
+        'alert_dispatch_id', 'user_id', 'nome', 'telefone', 'status', 'resultado',
     ];
 
     public function disparo(): BelongsTo
@@ -16,8 +16,8 @@ class AlertDispatchRecipient extends Model
         return $this->belongsTo(AlertDispatch::class, 'alert_dispatch_id');
     }
 
-    public function contato(): BelongsTo
+    public function usuario(): BelongsTo
     {
-        return $this->belongsTo(AlertContact::class, 'alert_contact_id');
+        return $this->belongsTo(User::class);
     }
 }

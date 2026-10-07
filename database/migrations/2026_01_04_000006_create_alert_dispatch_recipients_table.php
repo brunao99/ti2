@@ -11,7 +11,9 @@ return new class extends Migration
         Schema::create('alert_dispatch_recipients', function (Blueprint $table) {
             $table->id();
             $table->foreignId('alert_dispatch_id')->constrained('alert_dispatches')->cascadeOnDelete();
-            $table->foreignId('alert_contact_id')->nullable()->constrained('alert_contacts')->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+            // Cópia do momento do envio: se o usuário trocar de número ou for
+            // excluído, o histórico continua mostrando para onde foi.
             $table->string('nome');
             $table->string('telefone', 30);
             $table->enum('status', ['enviado', 'falha', 'ignorado']);

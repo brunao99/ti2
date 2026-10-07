@@ -8,15 +8,13 @@
 
 @section('acoes')
   <a class="btn btn-ghost" href="{{ route('alertas.modelos') }}">Modelos</a>
-  <a class="btn btn-ghost" href="{{ route('alertas.listas') }}">Listas</a>
-  <a class="btn btn-ghost" href="{{ route('alertas.contatos') }}">Contatos</a>
 @endsection
 
 @section('conteudo')
   <div class="filters" style="margin-bottom:1.5rem">
     <div>
       <p class="label">Histórico de disparos</p>
-      <p class="muted">Cada registro mostra a publicação, o modelo, a lista e o administrador responsável.</p>
+      <p class="muted">Cada registro mostra a publicação, o modelo e o administrador responsável.</p>
     </div>
   </div>
 
@@ -29,7 +27,7 @@
       </div>
       <h2 style="margin-bottom:.4rem">{{ $disparo->postagem->titulo }}</h2>
       <p class="muted">
-        Modelo: {{ $disparo->modelo->nome }} · Lista: {{ $disparo->lista->nome }}
+        Modelo: {{ $disparo->modelo->nome }}
         · {{ $disparo->total_enviados }}/{{ $disparo->total_destinatarios }} enviados
         @if ($disparo->total_falhas)
           · {{ $disparo->total_falhas }} falha(s)

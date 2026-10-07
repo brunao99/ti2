@@ -25,21 +25,29 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'nome' => fake()->name(),
+            'usuario' => fake()->unique()->userName(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
+            'perfil' => User::CLIENT,
+            'ativo' => true,
             'remember_token' => Str::random(10),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
+    /** Tem WhatsApp e autorizou receber alertas. */
+    public function recebeAlertas(): static
+    {
+        return $this->comTelefone()->state(fn (array $attributes) => [
+            'alerta_consentimento_em' => now(),
+        ]);
+    }
+
+    /** Tem WhatsApp, mas não autorizou. */
+    public function comTelefone(): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'telefone' => '5531' . fake()->unique()->numerify('9########'),
         ]);
     }
 }

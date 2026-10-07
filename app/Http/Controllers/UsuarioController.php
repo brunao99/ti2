@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\Telefone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -65,6 +66,12 @@ class UsuarioController extends Controller
             unset($dados['password']);
         }
 
+        // A autorização vale para o número que a pessoa aceitou. Se o ADM
+        // troca o número, ela precisa autorizar de novo em Minha conta.
+        if (($dados['telefone'] ?? null) !== $usuario->telefone) {
+            $usuario->alerta_consentimento_em = null;
+        }
+
         $usuario->update($dados);
 
         return redirect()->route('usuarios.index')->with('ok', 'Usuário atualizado.');
@@ -89,16 +96,21 @@ class UsuarioController extends Controller
     {
         $id = $usuario?->id;
 
+        // Guarda só dígitos com DDI, o formato da API da Meta. A máscara é da tela.
+        $request->merge(['telefone' => Telefone::normalizar($request->input('telefone'))]);
+
         return $request->validate([
             'nome'     => ['required', 'string', 'max:255'],
             'usuario'  => ['required', 'string', 'max:60', Rule::unique('users', 'usuario')->ignore($id)],
             'email'    => ['required', 'email', Rule::unique('users', 'email')->ignore($id)],
+            'telefone' => ['nullable', 'regex:' . Telefone::FORMATO],
             'password' => [$usuario ? 'nullable' : 'required', 'string', 'min:8'],
             // Impede o ADM de criar um Master mexendo no HTML do formulário.
             'perfil'   => ['required', Rule::in($request->user()->perfisQuePodeAtribuir())],
         ], [
             'usuario.unique'   => 'Já existe alguém com esse nome de usuário.',
             'email.unique'     => 'Esse e-mail já está cadastrado.',
+            'telefone.regex'   => 'Informe o WhatsApp com DDD, por exemplo (31) 99999-0001.',
             'password.min'     => 'A senha precisa de pelo menos 8 caracteres.',
             'perfil.in'        => 'Seu perfil não pode atribuir esse nível de acesso.',
         ]);

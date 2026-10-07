@@ -20,7 +20,7 @@
     </div>
 
     <h1>{{ $postagem->titulo }}</h1>
-    <p class="muted">O alerta será enviado somente uma vez para contatos com consentimento.</p>
+    <p class="muted">O alerta é enviado uma única vez, para os usuários que autorizaram receber no WhatsApp.</p>
   </article>
 
   <form method="POST" action="{{ route('alertas.disparar', $postagem) }}" class="form-grid" style="margin-top:1.5rem">
@@ -41,17 +41,23 @@
       <p class="muted" style="margin-top:.4rem">Variáveis disponíveis: <code>@{{titulo}}</code>, <code>@{{tipo}}</code>, <code>@{{data_publicacao}}</code>.</p>
     </div>
 
+    @php($autorizados = $destinatarios->filter->autorizouAlertas())
+    @php($pendentes = $destinatarios->reject->autorizouAlertas())
+
     <div>
-      <label class="label" for="alert_list_id">Lista de destinatários</label>
-      <select class="inp-box" id="alert_list_id" name="alert_list_id" required>
-        <option value="">Selecione uma lista</option>
-        @foreach ($listas as $lista)
-          <option value="{{ $lista->id }}"
-                  @selected(old('alert_list_id') == $lista->id)>
-            {{ $lista->nome }} — {{ $lista->consentidos_count }} com consentimento
-          </option>
-        @endforeach
-      </select>
+      <p class="label">Quem vai receber</p>
+      @if ($autorizados->isEmpty())
+        <p class="err show">Nenhum usuário autorizou receber alertas ainda. Cada um autoriza na tela Minha conta.</p>
+      @else
+        <p><b>{{ $autorizados->count() }}</b> {{ $autorizados->count() === 1 ? 'usuário' : 'usuários' }}:
+          {{ $autorizados->pluck('nome')->join(', ', ' e ') }}.</p>
+      @endif
+
+      @if ($pendentes->isNotEmpty())
+        <p class="muted" style="margin-top:.4rem">
+          Com telefone, mas sem autorização, ficam de fora: {{ $pendentes->pluck('nome')->join(', ', ' e ') }}.
+        </p>
+      @endif
     </div>
 
     <div>
