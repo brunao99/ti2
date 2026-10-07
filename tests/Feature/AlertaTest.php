@@ -96,6 +96,56 @@ class AlertaTest extends TestCase
             ->assertStatus(409);
     }
 
+    public function test_envio_pela_janela_recebe_so_o_formulario(): void
+    {
+        $adm = User::factory()->create(['perfil' => User::ADM]);
+        $postagem = $this->publicacao($adm);
+        User::factory()->recebeAlertas()->create(['nome' => 'Prefeitura Autorizada']);
+
+        // Pedido do JavaScript: só o formulário, sem o layout do painel.
+        $this->actingAs($adm)
+            ->get(route('alertas.enviar', $postagem), ['X-Requested-With' => 'XMLHttpRequest'])
+            ->assertOk()
+            ->assertDontSee('<html', false)
+            ->assertSee('data-envio', false)
+            ->assertSee('data-fecha', false)
+            ->assertSee('Prefeitura Autorizada');
+
+        // Acesso direto: página inteira, que é a reserva sem JavaScript.
+        $this->actingAs($adm)
+            ->get(route('alertas.enviar', $postagem))
+            ->assertOk()
+            ->assertSee('<html', false)
+            ->assertSee('data-envio', false)
+            ->assertDontSee('data-fecha', false);
+    }
+
+    public function test_lista_de_publicacoes_abre_o_envio_em_janela(): void
+    {
+        $adm = User::factory()->create(['perfil' => User::ADM]);
+        $postagem = $this->publicacao($adm);
+
+        $this->actingAs($adm)
+            ->get(route('postagens.index'))
+            ->assertOk()
+            ->assertSee('href="' . route('alertas.enviar', $postagem) . '" data-modal-envio', false);
+    }
+
+    public function test_erro_no_disparo_volta_para_a_pagina_de_envio(): void
+    {
+        $adm = User::factory()->create(['perfil' => User::ADM]);
+        $postagem = $this->publicacao($adm);
+        $modelo = AlertTemplate::create(['nome' => 'Teste', 'mensagem' => 'Aviso']);
+
+        // Vindo da janela, a página anterior é a lista; o erro tem de voltar
+        // para o envio, onde faz sentido.
+        $this->actingAs($adm)
+            ->from(route('postagens.index'))
+            ->post(route('alertas.disparar', $postagem), ['alert_template_id' => $modelo->id])
+            ->assertRedirect(route('alertas.enviar', $postagem))
+            ->assertSessionHasErrors('alerta');
+    }
+
     // ------------------------------------------------------------ Minha conta
 
     public function test_usuario_autoriza_e_desautoriza_os_alertas(): void
