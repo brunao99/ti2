@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Entrar — Painel Administrativo</title>
-<link rel="stylesheet" href="{{ asset('assets/style.css') }}">
+<link rel="stylesheet" href="{{ \App\Support\Asset::url('assets/style.css') }}">
 </head>
 <body>
 
@@ -86,6 +86,6 @@
   </div>
 </footer>
 
-<script src="{{ asset('assets/app.js') }}"></script>
+<script src="{{ \App\Support\Asset::url('assets/app.js') }}"></script>
 </body>
 </html>

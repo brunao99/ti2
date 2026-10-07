@@ -71,4 +71,15 @@ class ContaTest extends TestCase
             ->assertSee('Telefone')
             ->assertSee($cliente->telefoneFormatado(comDdi: false));
     }
+
+    public function test_css_e_js_saem_com_versao_no_endereco(): void
+    {
+        // Sem a versão, o navegador reaproveitava o CSS antigo depois de um
+        // deploy e a tela nova aparecia sem estilo.
+        $this->actingAs(User::factory()->create())
+            ->get(route('conta.edit'))
+            ->assertOk()
+            ->assertSee('assets/style.css?v=', false)
+            ->assertSee('assets/app.js?v=', false);
+    }
 }

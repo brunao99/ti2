@@ -120,5 +120,5 @@
     aplicar();
   })();
 </script>
-<script src="{{ asset('assets/editor.js') }}"></script>
+<script src="{{ \App\Support\Asset::url('assets/editor.js') }}"></script>
 @endpush

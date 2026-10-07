@@ -590,34 +590,135 @@ a.side-user.on{background:rgba(255,255,255,.1)}
 .side-user .seta{font-size:1.4rem;line-height:1;color:rgba(255,255,255,.6);letter-spacing:0}
 .mtop a.avatar:hover{text-decoration:none;filter:brightness(1.15)}
 
-.conta{max-width:760px}
-.conta-topo{display:flex;align-items:center;gap:1.2rem;margin-bottom:2rem}
-.avatar-g{width:72px;height:72px;font-size:1.4rem}
-.conta-quem h1{margin:0 0 .5rem;text-transform:none}
-.conta-tags{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+/* Desktop: perfil + sair à esquerda, seções à direita. */
+.conta{display:grid;grid-template-columns:300px minmax(0,1fr);
+  grid-template-areas:"perfil secoes" "sair secoes";grid-template-rows:auto 1fr;
+  gap:1.5rem;max-width:1180px;align-items:start}
+.conta-perfil{grid-area:perfil}
+.conta-secoes{grid-area:secoes;display:flex;flex-direction:column;gap:1.5rem;min-width:0}
+.conta-sair{grid-area:sair}
 
-.conta-bloco{border:1px solid var(--line);border-radius:var(--radius);padding:1.8rem;margin-bottom:1.4rem}
-.conta-bloco h2{margin:0 0 1rem}
+.conta-card{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1.6rem}
 
-.dados{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem 2rem;margin:0}
-.dados dt{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
-.dados dd{margin:.25rem 0 0;overflow-wrap:anywhere}
-.dados dd.mono{font-size:.95rem}
+/* Cartão de perfil */
+.conta-perfil{text-align:center;border-top:3px solid var(--navy)}
+.avatar-g{width:84px;height:84px;font-size:1.6rem;margin:.2rem auto 1rem;
+  background:var(--navy);box-shadow:0 0 0 4px var(--surface)}
+.perfil-nome{font-size:1.45rem;text-transform:none;margin:0;overflow-wrap:anywhere}
+.perfil-login{color:var(--muted);margin-top:.35rem}
+.perfil-tags{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;margin:1rem 0 1.3rem}
+.perfil-tags:last-child{margin-bottom:0}
+.perfil-numeros{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;padding-top:1.2rem;
+  border-top:1px solid var(--line)}
+.perfil-numeros div{background:var(--surface);border-radius:4px;padding:.8rem .5rem}
+.perfil-numeros b{display:block;font-family:var(--cond);font-size:1.7rem;line-height:1;color:var(--navy)}
+:root[data-theme="dark"] .perfil-numeros b{color:#9cc4e8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .perfil-numeros b{color:#9cc4e8}}
+.perfil-numeros span{display:block;font-size:.75rem;color:var(--muted);margin-top:.3rem}
 
-.permissoes{margin:.6rem 0 0;padding-left:1.2rem}
-.permissoes li{margin-bottom:.3rem}
-.conta-obs{font-size:.88rem;margin-top:1.2rem}
+/* Cabeçalho e rodapé dos cartões */
+.card-cab{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;
+  margin-bottom:1.3rem}
+.card-cab h2{font-size:1.25rem;margin:0}
+.card-cab p{font-size:.9rem;margin-top:.25rem}
+.card-cab .btn{flex:none}
+.card-rodape{font-size:.88rem;margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--line)}
+.card-acoes{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+  margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--line)}
+.card-acoes p{font-size:.88rem}
 
+/* Dados: grade de campos */
+.dados{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin:0}
+.dados > div{background:var(--surface);border-radius:4px;padding:.85rem 1rem}
+.dados dt{font-size:.66rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.dados dd{margin:.3rem 0 0;font-weight:700;overflow-wrap:anywhere}
+.dados dd.mono{font-size:.9rem;font-weight:400}
+
+/* Permissões */
+.permissoes{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem 1.4rem}
+.permissoes li{display:flex;gap:.6rem;align-items:flex-start;font-size:.95rem;line-height:1.4}
+.permissoes svg{flex:none;width:18px;height:18px;margin-top:.1rem;fill:none;stroke:var(--ok-fg);
+  stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+
+/* Status (chip) */
+.status{flex:none;display:inline-flex;align-items:center;gap:.45rem;padding:.35rem .8rem;
+  border-radius:99px;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.status::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.status-on{background:var(--ok-bg);color:var(--ok-fg)}
+.status-off{background:var(--surface);color:var(--muted);border:1px solid var(--line)}
+
+/* Alertas */
+.alertas-campos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.4rem;align-items:end}
+.alertas-campos .label{display:block;margin-bottom:.5rem}
+
+/* Interruptor (checkbox estilizado) */
+.switch{display:flex;align-items:center;gap:.9rem;cursor:pointer;padding:.55rem 0}
+.switch input{position:absolute;opacity:0;width:1px;height:1px}
+.switch-trilho{flex:none;position:relative;width:46px;height:26px;border-radius:99px;
+  background:var(--line);transition:.2s}
+.switch-trilho::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;
+  border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:.2s}
+.switch input:checked + .switch-trilho{background:var(--ok-fg)}
+.switch input:checked + .switch-trilho::after{transform:translateX(20px)}
+.switch input:focus-visible + .switch-trilho{outline:2px solid var(--blue);outline-offset:2px}
+.switch-texto b{display:block;font-size:.95rem}
+.switch-texto small{display:block;color:var(--muted);font-size:.82rem}
+
+/* Aparência */
+.temas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem}
+.tema{position:relative;display:flex;flex-direction:column;align-items:center;gap:.35rem;
+  padding:1.2rem .6rem 1rem;border:1px solid var(--line);border-radius:6px;background:var(--bg);
+  cursor:pointer;transition:.15s;text-align:center}
+.tema:hover{border-color:var(--muted)}
+.tema svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.8;
+  stroke-linecap:round;stroke-linejoin:round;margin-bottom:.3rem;color:var(--muted)}
+.tema svg .cheio{fill:currentColor;stroke:none}
+.tema b{font-size:.95rem}
+.tema small{font-size:.78rem;color:var(--muted)}
+.tema.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy);background:var(--surface)}
+.tema.on svg{color:var(--navy)}
+:root[data-theme="dark"] .tema.on{border-color:#9cc4e8;box-shadow:inset 0 0 0 1px #9cc4e8}
+:root[data-theme="dark"] .tema.on svg{color:#9cc4e8}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .tema.on{border-color:#9cc4e8;box-shadow:inset 0 0 0 1px #9cc4e8}
+  :root:not([data-theme="light"]) .tema.on svg{color:#9cc4e8}
+}
+.tema.on::after{content:"✓";position:absolute;top:.5rem;right:.6rem;font-size:.8rem;font-weight:700;
+  color:var(--ok-fg)}
+
+/* Sair */
+.conta-sair{text-align:center}
+.conta-sair .btn{width:100%}
+.conta-sair p{font-size:.82rem;margin-top:.6rem}
 .btn-perigo{background:#c0392b;border-color:#c0392b;color:#fff}
 .btn-perigo:hover{background:#a93226;border-color:#a93226;color:#fff}
+.btn-perigo svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2.2;
+  stroke-linecap:round;stroke-linejoin:round}
 
+@media (max-width:1100px){
+  .conta{grid-template-columns:260px minmax(0,1fr)}
+  .permissoes,.alertas-campos{grid-template-columns:1fr}
+  /* Dados viram lista: rótulo à esquerda, valor à direita, uma linha cada. */
+  .dados{grid-template-columns:1fr;gap:0}
+  .dados > div{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;
+    background:none;border-radius:0;padding:.75rem 0;border-bottom:1px solid var(--line)}
+  .dados > div:last-child{border-bottom:0}
+  .dados dd{margin:0;text-align:right}
+  .alertas-campos{gap:1rem}
+}
 @media (max-width:900px){
-  .conta-topo{gap:.9rem;margin-bottom:1.4rem}
-  .avatar-g{width:56px;height:56px;font-size:1.1rem}
-  .conta-bloco{padding:1.2rem}
-  .dados{grid-template-columns:1fr}
-  .conta .seg{flex-wrap:nowrap;gap:.5rem}
-  .conta .seg button{flex:1 1 0;padding:.75rem .4rem;font-size:.92rem}
+  .conta{grid-template-columns:minmax(0,1fr);grid-template-areas:"perfil" "secoes" "sair";
+    grid-template-rows:auto;gap:1rem}
+  .conta-secoes{gap:1rem}
+  .conta-card{padding:1.2rem}
+  .avatar-g{width:72px;height:72px;font-size:1.35rem}
+  .perfil-nome{font-size:1.3rem}
+  .card-cab{flex-wrap:wrap;margin-bottom:1rem}
+  .card-acoes{flex-direction:column;align-items:stretch;text-align:center}
+  .card-acoes .btn{width:100%}
+  .temas{gap:.5rem}
+  .tema{padding:1rem .3rem .8rem}
+  .tema small{display:none}
 }
 
 .tabela-rolagem{overflow-x:auto}
