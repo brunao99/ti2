@@ -120,7 +120,7 @@
                   {{-- Client não vê botão de edição. --}}
                   @if (auth()->user()->podeGerenciarPostagens())
                     @if ($postagem->situacao === 'publicado' && ! $postagem->alerta_enviado)
-                      <a class="btn btn-sm" href="{{ route('alertas.enviar', $postagem) }}">Enviar alerta</a>
+                      <a class="btn btn-sm" href="{{ route('alertas.enviar', $postagem) }}" data-modal-envio>Enviar alerta</a>
                     @endif
 
                     <a class="btn btn-ghost btn-sm" href="{{ route('postagens.edit', $postagem) }}">Editar</a>

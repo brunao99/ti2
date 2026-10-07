@@ -10,7 +10,7 @@
 @section('acoes')
   @if (auth()->user()->podeGerenciarPostagens())
     @if ($postagem->situacao === 'publicado' && ! $postagem->alerta_enviado)
-      <a class="btn" href="{{ route('alertas.enviar', $postagem) }}">Enviar alerta</a>
+      <a class="btn" href="{{ route('alertas.enviar', $postagem) }}" data-modal-envio>Enviar alerta</a>
     @endif
     <a class="btn btn-ghost" href="{{ route('postagens.edit', $postagem) }}">Editar</a>
   @endif

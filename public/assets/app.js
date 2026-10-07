@@ -43,18 +43,26 @@
       e.preventDefault();
       var alvo = document.getElementById(abre.getAttribute("data-abre"));
       if (alvo) {
-        alvo.classList.add("show");
         var t = abre.getAttribute("data-titulo");
         var slot = alvo.querySelector("[data-slot-titulo]");
         if (t && slot) slot.textContent = t;
+        abrirModal(alvo, abre);
       }
     }
     if (e.target.closest("[data-fecha]")) {
-      e.preventDefault();
       var m = e.target.closest(".modal");
-      if (m) m.classList.remove("show");
+      if (m) { e.preventDefault(); fecharModal(m); }
     }
-    if (e.target.classList.contains("modal")) e.target.classList.remove("show");
+    if (e.target.classList.contains("modal")) fecharModal(e.target);
+
+    // ---- enviar alerta numa janela sobre a página ---------------------------
+    // O link continua apontando para a página de envio: se o pedido falhar
+    // (alerta já enviado, sessão expirada), segue o link normalmente.
+    var envio = e.target.closest("a[data-modal-envio]");
+    if (envio && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      e.preventDefault();
+      abrirEnvio(envio);
+    }
 
     // ---- grupos de botões (pills / seg) ---------------------------------
     var p = e.target.closest("[data-grupo]");
@@ -70,8 +78,86 @@
 
   document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") {
-      document.querySelectorAll(".modal.show").forEach(function (m) { m.classList.remove("show"); });
+      document.querySelectorAll(".modal.show").forEach(fecharModal);
     }
+  });
+
+  // ---- janelas (modal) ------------------------------------------------------
+  var origemModal = null;
+
+  function abrirModal(modal, origem) {
+    origemModal = origem || document.activeElement;
+    modal.classList.add("show");
+    document.body.classList.add("modal-aberta");
+    // Primeiro campo do formulário; o X só se nada mais houver.
+    var foco = modal.querySelector(".modal-body select, .modal-body input:not([type=hidden]), .modal-body textarea")
+      || modal.querySelector("button");
+    if (foco) foco.focus();
+  }
+
+  function fecharModal(modal) {
+    modal.classList.remove("show");
+    if (!document.querySelector(".modal.show")) document.body.classList.remove("modal-aberta");
+    if (modal.hasAttribute("data-dinamica")) modal.innerHTML = "";
+    if (origemModal && origemModal.focus) origemModal.focus();
+    origemModal = null;
+  }
+
+  function abrirEnvio(link) {
+    if (link.getAttribute("aria-busy") === "true") return;
+    link.setAttribute("aria-busy", "true");
+
+    fetch(link.href, { headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "text/html" } })
+      .then(function (r) {
+        if (!r.ok) throw new Error(r.status);
+        return r.text();
+      })
+      .then(function (html) {
+        var modal = document.getElementById("modal-dinamica");
+        if (!modal) {
+          modal = document.createElement("div");
+          modal.id = "modal-dinamica";
+          modal.className = "modal";
+          modal.setAttribute("data-dinamica", "");
+          document.body.appendChild(modal);
+        }
+        modal.innerHTML = html;
+        atualizarPreview(modal.querySelector("[data-envio]"));
+        abrirModal(modal, link);
+      })
+      .catch(function () { window.location.href = link.href; })
+      .then(function () { link.removeAttribute("aria-busy"); });
+  }
+
+  // ---- prévia da mensagem do alerta ---------------------------------------
+  // Mesmas variáveis que o servidor substitui em AlertaController::montarMensagem.
+  function atualizarPreview(form) {
+    if (!form) return;
+    var select = form.querySelector("[name=alert_template_id]");
+    var alvo = form.querySelector(".envio-preview");
+    if (!select || !alvo) return;
+    var op = select.options[select.selectedIndex];
+    alvo.value = (op && op.getAttribute("data-mensagem") || "")
+      .split("{{titulo}}").join(form.getAttribute("data-titulo"))
+      .split("{{tipo}}").join(form.getAttribute("data-tipo"))
+      .split("{{data_publicacao}}").join(form.getAttribute("data-data"));
+  }
+
+  document.addEventListener("change", function (e) {
+    if (e.target.matches("[data-envio] [name=alert_template_id]")) {
+      atualizarPreview(e.target.closest("[data-envio]"));
+    }
+  });
+
+  // Página de reserva: a prévia já nasce preenchida se houver modelo escolhido.
+  document.querySelectorAll("[data-envio]").forEach(atualizarPreview);
+
+  // Evita duplo clique no disparo: o servidor também bloqueia o segundo envio.
+  document.addEventListener("submit", function (e) {
+    var form = e.target.closest("[data-envio]");
+    if (!form) return;
+    var btn = form.querySelector("button[type=submit]");
+    if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
   });
 
   // ---- filtro da listagem de publicações ---------------------------------

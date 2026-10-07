@@ -228,9 +228,15 @@ tbody tr:hover{background:var(--surface)}
 .drop{border:1px dashed var(--line);padding:3rem 1rem;text-align:center;color:var(--muted);border-radius:var(--radius)}
 .aside{background:var(--surface);border-top:3px solid var(--blue);padding:1.6rem}
 
-.modal{position:fixed;inset:0;background:rgba(15,25,35,.55);display:none;
-  align-items:center;justify-content:center;padding:1.2rem;z-index:60}
-.modal.show{display:flex}
+.modal{position:fixed;inset:0;background:rgba(15,25,35,.45);display:none;
+  align-items:center;justify-content:center;padding:1.2rem;z-index:60;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.modal.show{display:flex;animation:modal-fundo .18s ease-out}
+.modal.show .modal-box{animation:modal-entra .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes modal-fundo{from{opacity:0}to{opacity:1}}
+@keyframes modal-entra{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.modal.show,.modal.show .modal-box{animation:none}}
+body.modal-aberta{overflow:hidden}
 .modal-box{background:var(--bg);width:100%;max-width:820px;max-height:90vh;display:flex;
   flex-direction:column;border-radius:var(--radius);overflow:hidden}
 .modal-head{background:var(--navy);color:#fff;padding:1.5rem 1.8rem;display:flex;
@@ -722,3 +728,39 @@ a.side-user.on{background:rgba(255,255,255,.1)}
 }
 
 .tabela-rolagem{overflow-x:auto}
+
+/* ---------- Enviar alerta (janela e página de reserva) ---------- */
+.envio{max-width:880px;border-radius:8px;box-shadow:0 24px 60px rgba(10,20,30,.35)}
+.envio .modal-head h2{font-size:1.35rem;text-transform:none;margin-top:.3rem}
+.envio-meta{color:rgba(255,255,255,.75);font-size:.88rem;margin-top:.35rem}
+.envio .x{display:inline-flex;align-items:center;justify-content:center;border-radius:4px;transition:.15s}
+.envio .x:hover{background:rgba(255,255,255,.12);text-decoration:none}
+.envio-grid{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:1.6rem;align-items:start}
+.envio-campos .field{margin-bottom:1.2rem}
+.envio-campos .label{display:block;margin-bottom:.5rem}
+.envio-preview{resize:vertical;background:var(--surface);line-height:1.55}
+.envio-destino{background:var(--surface);border-radius:6px;padding:1.2rem}
+.envio-total{margin:.4rem 0 .8rem;color:var(--muted);font-size:.9rem}
+.envio-total b{display:block;font-family:var(--cond);font-size:2.2rem;line-height:1;color:var(--ink)}
+.envio-nomes{list-style:none;display:flex;flex-wrap:wrap;gap:.4rem}
+.envio-nomes li{background:var(--ok-bg);color:var(--ok-fg);border-radius:99px;padding:.25rem .7rem;
+  font-size:.82rem;font-weight:700}
+.envio-aviso{background:var(--warn-bg);color:var(--warn-fg);border-radius:4px;padding:.7rem .8rem;font-size:.88rem}
+.envio-fora{margin-top:1rem;padding-top:.9rem;border-top:1px solid var(--line);font-size:.84rem;color:var(--muted)}
+.envio-fora b{color:var(--ink)}
+.envio .modal-foot p{font-size:.86rem}
+.envio .btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* Página de reserva: o mesmo cartão, fora da janela. */
+.envio-pagina{display:flex;justify-content:center}
+.envio-pagina .envio{box-shadow:none;border:1px solid var(--line);overflow:visible}
+.envio-pagina .envio .modal-head{border-radius:8px 8px 0 0}
+
+@media (max-width:900px){
+  .modal{padding:0;align-items:flex-end}
+  .envio{max-height:92vh;border-radius:12px 12px 0 0}
+  .envio-grid{grid-template-columns:1fr;gap:1rem}
+  .envio .modal-foot{flex-direction:column;align-items:stretch}
+  .envio .modal-foot .acts{display:grid;grid-template-columns:1fr 1fr}
+  .envio-pagina .envio{border-radius:8px}
+}

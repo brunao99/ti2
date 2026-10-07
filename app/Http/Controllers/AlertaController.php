@@ -24,16 +24,24 @@ class AlertaController extends Controller
         return view('alertas.index', compact('disparos'));
     }
 
-    public function enviar(Postagem $postagem): View
+    /**
+     * Pedido via JavaScript (janela sobre a lista de publicações) recebe só o
+     * formulário; acesso direto recebe a página inteira, que é a reserva.
+     */
+    public function enviar(Request $request, Postagem $postagem): View
     {
         abort_unless($postagem->situacao === 'publicado', 404);
         abort_if($postagem->alerta_enviado, 409, 'Esta publicação já possui um alerta enviado.');
 
-        return view('alertas.enviar', [
+        $dados = [
             'postagem' => $postagem,
             'modelos' => AlertTemplate::orderBy('nome')->get(),
             'destinatarios' => User::alcancaveisPorAlerta()->orderBy('nome')->get(),
-        ]);
+        ];
+
+        return $request->ajax()
+            ? view('alertas._envio', $dados + ['modal' => true])
+            : view('alertas.enviar', $dados);
     }
 
     public function preview(Request $request, Postagem $postagem): RedirectResponse
@@ -67,8 +75,10 @@ class AlertaController extends Controller
         $usuarios = User::alcancaveisPorAlerta()->orderBy('nome')->get();
         $aptos = $usuarios->filter->autorizouAlertas()->values();
 
+        // Volta para a página de envio, e não para "a anterior": vindo da
+        // janela, a anterior é a lista, onde o erro ficaria sem contexto.
         if ($aptos->isEmpty()) {
-            return back()->withErrors([
+            return redirect()->route('alertas.enviar', $postagem)->withErrors([
                 'alerta' => 'Nenhum usuário autorizou receber alertas. A autorização é feita por cada um, na tela Minha conta.',
             ])->withInput();
         }
