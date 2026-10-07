@@ -52,9 +52,9 @@ class User extends Authenticatable
         return $this->telefone !== null && $this->alerta_consentimento_em !== null;
     }
 
-    public function telefoneFormatado(): string
+    public function telefoneFormatado(bool $comDdi = true): string
     {
-        return Telefone::formatar($this->telefone);
+        return Telefone::formatar($this->telefone, $comDdi);
     }
 
     // ---------------------------------------------------------------- perfis
@@ -112,6 +112,31 @@ class User extends Authenticatable
             self::MASTER => 'Master',
             self::ADM    => 'Administrador',
             default      => 'Cliente',
+        };
+    }
+
+    /** O que o perfil permite, para a tela Minha conta. */
+    public function permissoesDoPerfil(): array
+    {
+        return match ($this->perfil) {
+            self::MASTER => [
+                'Ver todas as publicações, inclusive rascunhos',
+                'Criar, editar e excluir publicações',
+                'Disparar alertas e gerenciar modelos de mensagem',
+                'Ver os indicadores do painel',
+                'Cadastrar e editar qualquer usuário, inclusive Master',
+            ],
+            self::ADM => [
+                'Ver todas as publicações, inclusive rascunhos',
+                'Criar, editar e excluir publicações',
+                'Disparar alertas e gerenciar modelos de mensagem',
+                'Ver os indicadores do painel',
+                'Cadastrar e editar usuários Administrador e Cliente',
+            ],
+            default => [
+                'Ver as publicações publicadas',
+                'Receber alertas de novas publicações no WhatsApp, se autorizar',
+            ],
         };
     }
 

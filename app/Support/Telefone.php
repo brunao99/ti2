@@ -36,8 +36,11 @@ class Telefone
         return $normalizado !== null && preg_match(self::FORMATO, $normalizado) === 1;
     }
 
-    /** 5531999990001 → +55 (31) 99999-0001 */
-    public static function formatar(?string $normalizado): string
+    /**
+     * 5531999990001 → +55 (31) 99999-0001, ou (31) 99999-0001 sem o DDI,
+     * para onde o espaço é curto e todo número é brasileiro (listagens).
+     */
+    public static function formatar(?string $normalizado, bool $comDdi = true): string
     {
         if (! self::valido($normalizado)) {
             return (string) $normalizado;
@@ -47,6 +50,8 @@ class Telefone
         $numero = substr($normalizado, 4);
         $corte = strlen($numero) - 4;
 
-        return sprintf('+55 (%s) %s-%s', $ddd, substr($numero, 0, $corte), substr($numero, $corte));
+        $local = sprintf('(%s) %s-%s', $ddd, substr($numero, 0, $corte), substr($numero, $corte));
+
+        return $comDdi ? '+55 ' . $local : $local;
     }
 }

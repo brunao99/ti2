@@ -3,28 +3,38 @@
 
 (function () {
   // ---- tema claro/escuro -------------------------------------------------
+  // Escolhido só na tela Minha conta e salvo neste navegador. Sem escolha
+  // salva ("auto"), o CSS segue o prefers-color-scheme do aparelho.
   var KEY = "ad-tema";
-  function aplicarTema(t) {
-    document.documentElement.setAttribute("data-theme", t);
-    try { localStorage.setItem(KEY, t); } catch (e) {}
+  function temaSalvo() {
+    try { return localStorage.getItem(KEY) || "auto"; } catch (e) { return "auto"; }
   }
-  try {
-    var salvo = localStorage.getItem(KEY);
-    if (salvo) document.documentElement.setAttribute("data-theme", salvo);
-  } catch (e) {}
+  function aplicarTema(t) {
+    if (t === "light" || t === "dark") {
+      document.documentElement.setAttribute("data-theme", t);
+    } else {
+      document.documentElement.removeAttribute("data-theme");
+    }
+  }
+  function marcarTema(t) {
+    document.querySelectorAll("[data-tema]").forEach(function (b) {
+      var on = b.getAttribute("data-tema") === t;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-checked", on ? "true" : "false");
+    });
+  }
+  aplicarTema(temaSalvo());
+  marcarTema(temaSalvo());
 
   document.addEventListener("click", function (e) {
-    // .toggle e a bolinha da barra; .toggle-tema e a linha inteira na tela "Mais"
-    var tg = e.target.closest(".toggle, .toggle-tema");
-    if (tg) {
-      var atual = document.documentElement.getAttribute("data-theme");
-      if (!atual) {
-        // sem preferência salva: parte do que o sistema do visitante usa
-        var sistemaEscuro = window.matchMedia &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches;
-        atual = sistemaEscuro ? "dark" : "light";
-      }
-      aplicarTema(atual === "dark" ? "light" : "dark");
+    var tema = e.target.closest("[data-tema]");
+    if (tema) {
+      var t = tema.getAttribute("data-tema");
+      try {
+        if (t === "auto") localStorage.removeItem(KEY); else localStorage.setItem(KEY, t);
+      } catch (e4) {}
+      aplicarTema(t);
+      marcarTema(t);
     }
 
     // ---- modal ----------------------------------------------------------

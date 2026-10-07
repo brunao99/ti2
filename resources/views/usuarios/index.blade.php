@@ -20,62 +20,69 @@
     <p class="note">Como administrador, você não visualiza nem edita contas Master.</p>
   @endif
 
-  <table>
-    <thead>
-      <tr>
-        <th>Nome</th>
-        <th style="width:160px">Usuário</th>
-        <th>E-mail</th>
-        <th style="width:150px">Perfil</th>
-        <th style="width:130px">Alertas</th>
-        <th style="width:110px">Situação</th>
-        <th style="width:190px">Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      @forelse ($usuarios as $usuario)
+  {{-- Em telas médias as oito colunas não cabem: a tabela rola sozinha,
+       sem alargar a página inteira. --}}
+  <div class="tabela-rolagem">
+    <table>
+      <thead>
         <tr>
-          <td class="t-title">{{ $usuario->nome }}</td>
-          <td class="mono">{{ $usuario->usuario }}</td>
-          <td class="muted">{{ $usuario->email }}</td>
-          <td><span class="tag">{{ $usuario->rotuloPerfil() }}</span></td>
-          <td class="muted" title="{{ $usuario->telefone ? $usuario->telefoneFormatado() : '' }}">
-            @if ($usuario->autorizouAlertas())
-              Recebe
-            @elseif ($usuario->telefone)
-              Não autorizou
-            @else
-              Sem telefone
-            @endif
-          </td>
-          <td>
-            <span class="badge {{ $usuario->ativo ? 'badge-ok' : 'badge-draft' }}">
-              {{ $usuario->ativo ? 'Ativo' : 'Inativo' }}
-            </span>
-          </td>
-          <td>
-            <div class="acts">
-              @if (auth()->user()->podeEditarUsuario($usuario))
-                <a class="btn btn-ghost btn-sm" href="{{ route('usuarios.edit', $usuario) }}">Editar</a>
-
-                @unless ($usuario->is(auth()->user()))
-                  <form method="POST" action="{{ route('usuarios.destroy', $usuario) }}"
-                        onsubmit="return confirm('Excluir {{ $usuario->nome }}?')">
-                    @csrf
-                    @method('DELETE')
-                    <button class="btn btn-sm" type="submit">Excluir</button>
-                  </form>
-                @endunless
-              @else
-                <span class="muted">—</span>
-              @endif
-            </div>
-          </td>
+          <th>Nome</th>
+          <th>Usuário</th>
+          <th>E-mail</th>
+          <th>Telefone</th>
+          <th>Perfil</th>
+          <th>Alertas</th>
+          <th>Situação</th>
+          <th>Ações</th>
         </tr>
-      @empty
-        <tr><td colspan="7" class="muted">Nenhum usuário cadastrado.</td></tr>
-      @endforelse
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        @forelse ($usuarios as $usuario)
+          <tr>
+            <td class="t-title">{{ $usuario->nome }}</td>
+            <td class="mono">{{ $usuario->usuario }}</td>
+            {{-- Quebra só antes do @, nunca no meio do endereço. --}}
+            <td class="muted">{!! str_replace('@', '<wbr>@', e($usuario->email)) !!}</td>
+            <td class="muted" style="white-space:nowrap">{{ $usuario->telefone ? $usuario->telefoneFormatado(comDdi: false) : '—' }}</td>
+            <td><span class="tag">{{ $usuario->rotuloPerfil() }}</span></td>
+            <td class="muted">
+              @if ($usuario->autorizouAlertas())
+                Recebe
+              @elseif ($usuario->telefone)
+                Não autorizou
+              @else
+                Sem telefone
+              @endif
+            </td>
+            <td>
+              <span class="badge {{ $usuario->ativo ? 'badge-ok' : 'badge-draft' }}">
+                {{ $usuario->ativo ? 'Ativo' : 'Inativo' }}
+              </span>
+            </td>
+            <td>
+              <div class="acts">
+                @if (auth()->user()->podeEditarUsuario($usuario))
+                  <a class="btn btn-ghost btn-sm" href="{{ route('usuarios.edit', $usuario) }}">Editar</a>
+
+                  @unless ($usuario->is(auth()->user()))
+                    <form method="POST" action="{{ route('usuarios.destroy', $usuario) }}"
+                          onsubmit="return confirm('Excluir {{ $usuario->nome }}?')">
+                      @csrf
+                      @method('DELETE')
+                      <button class="btn btn-sm" type="submit">Excluir</button>
+                    </form>
+                  @endunless
+                @else
+                  <span class="muted">—</span>
+                @endif
+              </div>
+            </td>
+          </tr>
+        @empty
+          <tr><td colspan="8" class="muted">Nenhum usuário cadastrado.</td></tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
 
 @endsection

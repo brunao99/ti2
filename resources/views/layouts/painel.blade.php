@@ -35,21 +35,18 @@
       @if ($eu->podeGerenciarUsuarios())
         <a href="{{ route('usuarios.index') }}" @class(['on' => request()->routeIs('usuarios.*')])>Usuários</a>
       @endif
-
-      <a href="{{ route('conta.edit') }}" @class(['on' => request()->routeIs('conta.*')])>Minha conta</a>
     </nav>
 
-    <div class="side-user">
+    {{-- O nome leva a Minha conta, que concentra dados, alertas, tema e sair. --}}
+    <a href="{{ route('conta.edit') }}" title="Minha conta"
+       @class(['side-user', 'on' => request()->routeIs('conta.*')])>
       <span class="avatar">{{ $eu->iniciais() }}</span>
       <span class="quem">
         <b>{{ $eu->nome }}</b>
         <span>{{ $eu->rotuloPerfil() }}</span>
       </span>
-      <form method="POST" action="{{ route('logout') }}">
-        @csrf
-        <button type="submit" class="btn-sair" title="Sair" aria-label="Sair do painel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
-      </form>
-    </div>
+      <span class="seta" aria-hidden="true">›</span>
+    </a>
   </aside>
 
   <div class="main">
@@ -58,18 +55,13 @@
         <span class="brand-name">Algoritmos e Dados</span>
         <span class="brand-sub">consultoria</span>
       </span>
-      <button class="toggle" title="Alternar tema"><span class="s">☀</span><span class="m">☾</span></button>
-      <span class="avatar" style="width:38px;height:38px">{{ $eu->iniciais() }}</span>
-      <form method="POST" action="{{ route('logout') }}">
-        @csrf
-        <button type="submit" class="btn-sair" title="Sair" aria-label="Sair do painel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
-      </form>
+      <a href="{{ route('conta.edit') }}" class="avatar" style="width:38px;height:38px"
+         title="Minha conta" aria-label="Minha conta">{{ $eu->iniciais() }}</a>
     </div>
 
     <div class="topbar">
       <div>@yield('cabecalho')</div>
       <div class="topbar-actions">
-        <button class="toggle" title="Alternar tema"><span class="s">☀</span><span class="m">☾</span></button>
         @yield('acoes')
       </div>
     </div>

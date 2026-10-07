@@ -41,34 +41,4 @@
     </section>
   @endforeach
 
-  {{-- Tema e sair fecham a tela: são ações da pessoa, não módulos. --}}
-  <section class="grupo-mais">
-    <p class="label">Preferências</p>
-
-    <ul class="lista-mais">
-      <li>
-        <button type="button" class="toggle-tema">
-          <span>
-            <b>Tema claro ou escuro</b>
-            <small>Alterna a aparência do painel</small>
-          </span>
-          <span class="toggle" aria-hidden="true"><span class="s">☀</span><span class="m">☾</span></span>
-        </button>
-      </li>
-
-      <li>
-        <form method="POST" action="{{ route('logout') }}">
-          @csrf
-          <button type="submit" class="sair-lista">
-            <span>
-              <b>Sair</b>
-              <small>Encerra a sessão neste aparelho</small>
-            </span>
-            <span class="seta" aria-hidden="true">›</span>
-          </button>
-        </form>
-      </li>
-    </ul>
-  </section>
-
 @endsection

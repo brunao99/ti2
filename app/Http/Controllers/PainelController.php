@@ -75,8 +75,7 @@ class PainelController extends Controller
         $grupos[] = [
             'titulo' => 'Minha conta',
             'itens'  => [
-                ['rotulo' => 'Alertas no WhatsApp', 'rota' => 'conta.edit', 'desc' => 'Autorizar ou parar de receber'],
-                ['rotulo' => 'Meu perfil', 'rota' => null, 'desc' => 'Nome, e-mail e senha'],
+                ['rotulo' => 'Minha conta', 'rota' => 'conta.edit', 'desc' => 'Dados, alertas no WhatsApp, tema e sair'],
             ],
         ];
 
