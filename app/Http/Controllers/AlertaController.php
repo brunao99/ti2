@@ -21,7 +21,78 @@ class AlertaController extends Controller
             ->latest()
             ->get();
 
-        return view('alertas.index', compact('disparos'));
+        // Medidor: conta mensagens (destinatários), não disparos. Ignorados
+        // não entram na taxa — para eles nada foi tentado.
+        $porStatus = AlertDispatchRecipient::selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $enviados = (int) ($porStatus['enviado'] ?? 0);
+        $falhas = (int) ($porStatus['falha'] ?? 0);
+        $tentados = $enviados + $falhas;
+
+        $medidor = [
+            'enviados'   => $enviados,
+            'falhas'     => $falhas,
+            'ignorados'  => (int) ($porStatus['ignorado'] ?? 0),
+            'taxa'       => $tentados ? round($enviados / $tentados * 100, 1) : null,
+            'pct_envio'  => $tentados ? $enviados / $tentados * 100 : 0,
+            'disparos'   => $disparos->count(),
+            'pendentes'  => $disparos->filter->temFalhas()->count(),
+        ];
+
+        return view('alertas.index', compact('disparos', 'medidor'));
+    }
+
+    /**
+     * Reenvia só para quem falhou. A autorização é conferida de novo: quem
+     * desautorizou, foi desativado ou removido depois do disparo não recebe,
+     * e passa a constar como ignorado.
+     */
+    public function reenviar(AlertDispatch $disparo, AlertSender $sender): RedirectResponse
+    {
+        abort_unless($disparo->temFalhas(), 409, 'Este disparo não tem falhas para reenviar.');
+
+        [$enviados, $falhas] = DB::transaction(function () use ($disparo, $sender) {
+            // Trava o disparo: dois cliques seguidos não reenviam em dobro.
+            $disparo = AlertDispatch::lockForUpdate()->findOrFail($disparo->id);
+
+            $pendentes = $disparo->destinatarios()->where('status', 'falha')->with('usuario')->get();
+            $enviados = 0;
+            $falhas = 0;
+
+            foreach ($pendentes as $destinatario) {
+                $usuario = $destinatario->usuario;
+
+                if (! $usuario || ! $usuario->ativo || ! $usuario->autorizouAlertas()) {
+                    $destinatario->update([
+                        'status' => 'ignorado',
+                        'resultado' => 'Não reenviado: a conta não está mais ativa ou autorizada.',
+                    ]);
+                    continue;
+                }
+
+                $resultado = $sender->send($usuario->telefone, $disparo->mensagem);
+                $resultado['status'] === 'enviado' ? $enviados++ : $falhas++;
+
+                $destinatario->update([
+                    'telefone' => $usuario->telefone,
+                    'status' => $resultado['status'],
+                    'resultado' => $resultado['resultado'],
+                    'tentativas' => $destinatario->tentativas + 1,
+                ]);
+            }
+
+            $disparo->recalcularTotais();
+
+            return [$enviados, $falhas];
+        });
+
+        $mensagem = $falhas === 0
+            ? "Reenvio concluído: {$enviados} entregue(s)."
+            : "Reenvio concluído: {$enviados} entregue(s), {$falhas} ainda com falha.";
+
+        return back()->with('ok', $mensagem);
     }
 
     /**
@@ -111,6 +182,7 @@ class AlertaController extends Controller
                         'telefone' => $usuario->telefone,
                         'status' => 'ignorado',
                         'resultado' => 'Não autorizou receber alertas.',
+                        'tentativas' => 0,
                     ]);
                     continue;
                 }

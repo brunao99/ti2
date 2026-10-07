@@ -10,7 +10,7 @@
 @section('conteudo')
   <article class="doc">
     <div class="meta">
-      <span class="badge badge-ok">{{ ucfirst($disparo->status) }}</span>
+      <span class="badge {{ $disparo->classeStatus() }}">{{ $disparo->rotuloStatus() }}</span>
       <span>{{ $disparo->created_at->format('d/m/Y H:i') }}</span>
     </div>
 
@@ -26,23 +26,29 @@
 
     <div class="hr"></div>
     <p><b>Resultado</b></p>
-    <p class="muted">
-      {{ $disparo->total_enviados }} enviados ·
-      {{ $disparo->total_falhas }} falhas ·
-      {{ $disparo->destinatarios->where('status', 'ignorado')->count() }} ignorados por não terem autorizado
-    </p>
+    <div class="cabecalho-linha">
+      <p class="muted">
+        {{ $disparo->total_enviados }} enviados ·
+        {{ $disparo->total_falhas }} falhas ·
+        {{ $disparo->destinatarios->where('status', 'ignorado')->count() }} ignorados
+      </p>
+      @include('alertas._reenviar')
+    </div>
   </article>
 
   <table style="margin-top:1rem">
     <thead>
-      <tr><th>Usuário</th><th>Telefone</th><th>Status</th><th>Resultado</th></tr>
+      <tr><th>Usuário</th><th>Telefone</th><th>Status</th><th>Tentativas</th><th>Resultado</th></tr>
     </thead>
     <tbody>
       @foreach ($disparo->destinatarios as $destinatario)
         <tr>
           <td>{{ $destinatario->nome }}</td>
           <td class="mono">{{ \App\Support\Telefone::formatar($destinatario->telefone) }}</td>
-          <td>{{ ucfirst($destinatario->status) }}</td>
+          <td>
+            <span @class(['txt-falha' => $destinatario->status === 'falha'])>{{ ucfirst($destinatario->status) }}</span>
+          </td>
+          <td>{{ $destinatario->tentativas ?: '—' }}</td>
           <td class="muted">{{ $destinatario->resultado }}</td>
         </tr>
       @endforeach

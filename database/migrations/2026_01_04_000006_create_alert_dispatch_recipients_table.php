@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('telefone', 30);
             $table->enum('status', ['enviado', 'falha', 'ignorado']);
             $table->string('resultado')->nullable();
+            // Quantas vezes o envio foi tentado: 1 no disparo, +1 a cada reenvio.
+            $table->unsignedSmallInteger('tentativas')->default(1);
             $table->timestamps();
 
             $table->index(['alert_dispatch_id', 'status']);

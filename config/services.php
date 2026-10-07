@@ -28,6 +28,12 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Envio de alertas. Enquanto o envio é simulado, a porcentagem abaixo
+    // faz parte dos envios falhar de propósito, para testar o reenvio.
+    'alertas' => [
+        'simulacao_falha' => (int) env('ALERTA_SIMULACAO_FALHA', 0),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

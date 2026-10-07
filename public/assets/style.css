@@ -764,3 +764,70 @@ a.side-user.on{background:rgba(255,255,255,.1)}
   .envio .modal-foot .acts{display:grid;grid-template-columns:1fr 1fr}
   .envio-pagina .envio{border-radius:8px}
 }
+
+/* ---------- Central de alertas: medidor e histórico ---------- */
+
+/* Entregue × falhou. Par validado para daltonismo nos dois temas (azul ×
+   vermelho; verde × vermelho reprovou). A cor nunca vai sozinha: a legenda
+   leva ✓ e ✕ e o número. */
+:root{--st-ok:#2b6cb0;--st-falha:#d03b3b}
+:root[data-theme="dark"]{--st-ok:#5b96d4;--st-falha:#e0574f}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--st-ok:#5b96d4;--st-falha:#e0574f}}
+
+.badge-erro{background:#fdecec;color:#a12a20}
+:root[data-theme="dark"] .badge-erro{background:#3a1a18;color:#f0a79e}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .badge-erro{background:#3a1a18;color:#f0a79e}}
+.txt-falha{color:var(--st-falha);font-weight:700}
+
+.medidor{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:1.5rem;
+  border:1px solid var(--line);border-radius:6px;padding:1.6rem;margin-bottom:2.2rem}
+.medidor-taxa{font-family:var(--cond);font-size:3.4rem;line-height:1;margin:.5rem 0 1rem;font-weight:600}
+.medidor-taxa span{font-size:1.6rem;margin-left:.1rem;color:var(--muted)}
+
+/* Barra: segmentos proporcionais, 2px de fundo entre eles, pontas arredondadas. */
+.medidor-barra{display:flex;gap:2px;height:14px;border-radius:4px;overflow:hidden;background:var(--surface)}
+.medidor-barra .seg{flex-basis:0;min-width:4px}
+.seg-ok{background:var(--st-ok)}
+.seg-falha{background:var(--st-falha)}
+
+.medidor-legenda{list-style:none;display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;margin-top:.8rem;font-size:.92rem}
+.medidor-legenda li{display:flex;align-items:center;gap:.45rem}
+.ponto{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;
+  border-radius:50%;color:#fff;font-size:.66rem;font-weight:700;flex:none}
+.ponto-ok{background:var(--st-ok)}
+.ponto-falha{background:var(--st-falha)}
+
+.medidor-numeros{display:grid;grid-template-columns:1fr;gap:.6rem;align-content:center}
+.medidor-numeros > div{display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;
+  background:var(--surface);border-radius:4px;padding:.75rem 1rem;border-left:3px solid transparent}
+.medidor-numeros b{font-family:var(--cond);font-size:1.6rem;line-height:1;margin-left:auto}
+.medidor-numeros small{color:var(--muted);font-size:.78rem;flex-basis:100%;margin-top:-.4rem}
+.medidor-numeros > div:last-child{flex-wrap:wrap}
+.medidor-numeros .alerta-pendente{border-left-color:var(--st-falha)}
+.medidor-numeros .alerta-pendente b{color:var(--st-falha)}
+
+/* Cartões do histórico */
+.disparo{display:flex;align-items:center;justify-content:space-between;gap:1.2rem;
+  border:1px solid var(--line);border-left:3px solid var(--line);border-radius:6px;
+  padding:1.1rem 1.3rem;margin-bottom:.8rem}
+.disparo-falha{border-left-color:var(--st-falha)}
+.disparo-info{min-width:0}
+.disparo-info .meta{display:flex;gap:.8rem;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:.86rem}
+.disparo-info h3{font-size:1.15rem;margin:.45rem 0 .3rem;text-transform:none;font-family:var(--sans);font-weight:700}
+.disparo-info p{font-size:.9rem}
+.disparo-conta{color:var(--ink)}
+.disparo-acoes{display:flex;gap:.5rem;align-items:center;flex:none}
+.btn-reenviar{background:var(--st-falha);border-color:var(--st-falha);white-space:nowrap}
+.btn-reenviar:hover{background:#a93226;border-color:#a93226}
+.btn-reenviar svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.4;
+  stroke-linecap:round;stroke-linejoin:round}
+.btn-reenviar[disabled]{opacity:.6;cursor:wait}
+
+@media (max-width:900px){
+  .medidor{grid-template-columns:1fr;padding:1.2rem;gap:1.2rem;margin-bottom:1.6rem}
+  .medidor-taxa{font-size:2.8rem}
+  .disparo{flex-direction:column;align-items:stretch;padding:1rem}
+  .disparo-acoes{flex-wrap:wrap}
+  .disparo-acoes form,.disparo-acoes .btn{flex:1}
+  .disparo-acoes .btn{width:100%}
+}

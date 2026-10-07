@@ -77,6 +77,8 @@ Route::middleware(['auth', 'perfil:master,adm'])->group(function () {
         ->name('alertas.disparar');
     Route::get('/alertas/disparos/{disparo}', [AlertaController::class, 'show'])
         ->name('alertas.show');
+    Route::post('/alertas/disparos/{disparo}/reenviar', [AlertaController::class, 'reenviar'])
+        ->name('alertas.reenviar');
 
     Route::get('/alertas/modelos', [AlertaController::class, 'modelos'])->name('alertas.modelos');
     Route::get('/alertas/modelos/novo', [AlertaController::class, 'criarModelo'])->name('alertas.modelos.novo');
