@@ -580,3 +580,42 @@ th{padding:0}
   border-left:3px solid transparent;cursor:default}
 .side nav .inativo .em-breve{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.18);
   color:rgba(255,255,255,.55);font-size:.55rem;padding:.15rem .4rem}
+
+/* ---------- Minha conta ---------- */
+
+/* O bloco do usuário na barra lateral é o caminho para Minha conta. */
+a.side-user{color:#fff;transition:.15s}
+a.side-user:hover{background:rgba(255,255,255,.06);text-decoration:none}
+a.side-user.on{background:rgba(255,255,255,.1)}
+.side-user .seta{font-size:1.4rem;line-height:1;color:rgba(255,255,255,.6);letter-spacing:0}
+.mtop a.avatar:hover{text-decoration:none;filter:brightness(1.15)}
+
+.conta{max-width:760px}
+.conta-topo{display:flex;align-items:center;gap:1.2rem;margin-bottom:2rem}
+.avatar-g{width:72px;height:72px;font-size:1.4rem}
+.conta-quem h1{margin:0 0 .5rem;text-transform:none}
+.conta-tags{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+
+.conta-bloco{border:1px solid var(--line);border-radius:var(--radius);padding:1.8rem;margin-bottom:1.4rem}
+.conta-bloco h2{margin:0 0 1rem}
+
+.dados{display:grid;grid-template-columns:1fr 1fr;gap:1.1rem 2rem;margin:0}
+.dados dt{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.dados dd{margin:.25rem 0 0;overflow-wrap:anywhere}
+.dados dd.mono{font-size:.95rem}
+
+.permissoes{margin:.6rem 0 0;padding-left:1.2rem}
+.permissoes li{margin-bottom:.3rem}
+.conta-obs{font-size:.88rem;margin-top:1.2rem}
+
+.btn-perigo{background:#c0392b;border-color:#c0392b;color:#fff}
+.btn-perigo:hover{background:#a93226;border-color:#a93226;color:#fff}
+
+@media (max-width:900px){
+  .conta-topo{gap:.9rem;margin-bottom:1.4rem}
+  .avatar-g{width:56px;height:56px;font-size:1.1rem}
+  .conta-bloco{padding:1.2rem}
+  .dados{grid-template-columns:1fr}
+  .conta .seg{flex-wrap:nowrap;gap:.5rem}
+  .conta .seg button{flex:1 1 0;padding:.75rem .4rem;font-size:.92rem}
+}

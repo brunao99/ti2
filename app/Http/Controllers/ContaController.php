@@ -2,23 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AlertDispatch;
 use App\Support\Telefone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Minha conta — o que a própria pessoa decide sobre a conta dela.
+ * Minha conta — os dados da pessoa e o que ela decide sobre a própria conta:
+ * alertas por WhatsApp, tema do painel e sair. Abre ao clicar no nome dela,
+ * na barra lateral (ou no avatar, no mobile).
  *
- * Por ora, só os alertas por WhatsApp. O consentimento mora aqui, e não no
- * cadastro do ADM, porque a Meta exige opt-in de quem recebe: o registro
- * tem de dizer que a pessoa aceitou, não que alguém disse que ela aceitou.
+ * O consentimento dos alertas mora aqui, e não no cadastro do ADM, porque a
+ * Meta exige opt-in de quem recebe: o registro tem de dizer que a pessoa
+ * aceitou, não que alguém disse que ela aceitou.
  */
 class ContaController extends Controller
 {
     public function edit(Request $request): View
     {
-        return view('conta.edit', ['eu' => $request->user()]);
+        $eu = $request->user();
+
+        return view('conta.edit', [
+            'eu' => $eu,
+            // Números de atividade só fazem sentido para quem publica e dispara.
+            'atividade' => $eu->podeGerenciarPostagens() ? [
+                'publicacoes' => $eu->postagens()->count(),
+                'alertas'     => AlertDispatch::where('user_id', $eu->id)->count(),
+            ] : null,
+        ]);
     }
 
     public function update(Request $request): RedirectResponse

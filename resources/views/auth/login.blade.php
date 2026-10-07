@@ -18,9 +18,6 @@
   </a>
   <nav class="site-nav">
     <a href="{{ route('login') }}" class="on">Home</a>
-    <div class="theme-wrap">
-      <button class="toggle" title="Alternar tema"><span class="s">☀</span><span class="m">☾</span></button>
-    </div>
   </nav>
 </header>
 
