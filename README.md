@@ -137,8 +137,16 @@ cadastro de contato à parte. Quem recebe é toda conta **ativa**, com
 - No disparo, quem tem telefone mas não autorizou aparece no histórico como
   **ignorado**. O histórico guarda nome e telefone do momento do envio.
 
-O envio ainda é **simulado** (`SimulatedWhatsAppSender`). Antes de ligar a API
-real da Meta:
+Na **Central de alertas**, o medidor mostra a taxa de entrega (entregues ×
+falharam; ignorados ficam fora, porque nada foi tentado) e cada disparo com
+falha ganha o botão **Reenviar**. O reenvio tenta de novo só quem falhou,
+confere outra vez a autorização e conta as tentativas de cada destinatário.
+
+O envio ainda é **simulado** (`SimulatedWhatsAppSender`). Para ver falhas e o
+reenvio funcionando na homologação, defina `ALERTA_SIMULACAO_FALHA` com a
+porcentagem de envios que devem falhar (ex.: `30`); o padrão é `0`.
+
+Antes de ligar a API real da Meta:
 
 1. **MySQL no Railway** — com SQLite, cada deploy apaga histórico e datas de
    autorização, justamente a prova do opt-in.

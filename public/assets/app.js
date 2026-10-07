@@ -152,9 +152,9 @@
   // Página de reserva: a prévia já nasce preenchida se houver modelo escolhido.
   document.querySelectorAll("[data-envio]").forEach(atualizarPreview);
 
-  // Evita duplo clique no disparo: o servidor também bloqueia o segundo envio.
+  // Evita duplo clique no disparo e no reenvio: o servidor também protege.
   document.addEventListener("submit", function (e) {
-    var form = e.target.closest("[data-envio]");
+    var form = e.target.closest("[data-envio], [data-reenviar]");
     if (!form) return;
     var btn = form.querySelector("button[type=submit]");
     if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }

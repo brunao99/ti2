@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AlertDispatchRecipient extends Model
 {
     protected $fillable = [
-        'alert_dispatch_id', 'user_id', 'nome', 'telefone', 'status', 'resultado',
+        'alert_dispatch_id', 'user_id', 'nome', 'telefone', 'status', 'resultado', 'tentativas',
     ];
 
     public function disparo(): BelongsTo
@@ -18,6 +18,7 @@ class AlertDispatchRecipient extends Model
 
     public function usuario(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        // Chave explícita: pelo nome do método o Laravel procuraria usuario_id.
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
