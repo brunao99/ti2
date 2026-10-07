@@ -52,9 +52,9 @@ class User extends Authenticatable
         return $this->telefone !== null && $this->alerta_consentimento_em !== null;
     }
 
-    public function telefoneFormatado(): string
+    public function telefoneFormatado(bool $comDdi = true): string
     {
-        return Telefone::formatar($this->telefone);
+        return Telefone::formatar($this->telefone, $comDdi);
     }
 
     // ---------------------------------------------------------------- perfis

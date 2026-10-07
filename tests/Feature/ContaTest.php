@@ -59,4 +59,16 @@ class ContaTest extends TestCase
 
         $this->assertGuest();
     }
+
+    public function test_listagem_de_usuarios_mostra_o_telefone(): void
+    {
+        $adm = User::factory()->create(['perfil' => User::ADM]);
+        $cliente = User::factory()->comTelefone()->create();
+
+        $this->actingAs($adm)
+            ->get(route('usuarios.index'))
+            ->assertOk()
+            ->assertSee('Telefone')
+            ->assertSee($cliente->telefoneFormatado(comDdi: false));
+    }
 }

@@ -24,5 +24,6 @@ class TelefoneTest extends TestCase
 
         $this->assertSame('+55 (31) 99999-0001', Telefone::formatar('5531999990001'));
         $this->assertSame('+55 (31) 3222-0001', Telefone::formatar('553132220001'));
+        $this->assertSame('(31) 99999-0001', Telefone::formatar('5531999990001', comDdi: false));
     }
 }
