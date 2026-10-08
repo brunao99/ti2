@@ -9,6 +9,7 @@ class AlertDispatchRecipient extends Model
 {
     protected $fillable = [
         'alert_dispatch_id', 'user_id', 'nome', 'telefone', 'status', 'resultado', 'tentativas',
+        'wamid', 'status_meta', 'erro_codigo', 'erro_mensagem',
     ];
 
     public function disparo(): BelongsTo

@@ -58,6 +58,7 @@ class AlertaController extends Controller
             $disparo = AlertDispatch::lockForUpdate()->findOrFail($disparo->id);
 
             $pendentes = $disparo->destinatarios()->where('status', 'falha')->with('usuario')->get();
+            $parametros = $this->parametrosTemplate($disparo->postagem);
             $enviados = 0;
             $falhas = 0;
 
@@ -72,15 +73,17 @@ class AlertaController extends Controller
                     continue;
                 }
 
-                $resultado = $sender->send($usuario->telefone, $disparo->mensagem);
+                $resultado = $sender->send($usuario->telefone, $disparo->mensagem, $parametros);
                 $resultado['status'] === 'enviado' ? $enviados++ : $falhas++;
 
+                // Nova tentativa, novo wamid: os eventos do envio anterior
+                // deixam de encontrar este destinatário.
                 $destinatario->update([
                     'telefone' => $usuario->telefone,
                     'status' => $resultado['status'],
                     'resultado' => $resultado['resultado'],
                     'tentativas' => $destinatario->tentativas + 1,
-                ]);
+                ] + $this->dadosMeta($resultado));
             }
 
             $disparo->recalcularTotais();
@@ -155,9 +158,10 @@ class AlertaController extends Controller
         }
 
         $mensagem = $this->montarMensagem($modelo->mensagem, $postagem);
+        $parametros = $this->parametrosTemplate($postagem);
 
         $disparo = DB::transaction(function () use (
-            $postagem, $modelo, $aptos, $usuarios, $mensagem, $request, $sender
+            $postagem, $modelo, $aptos, $usuarios, $mensagem, $parametros, $request, $sender
         ) {
             $disparo = AlertDispatch::create([
                 'postagem_id' => $postagem->id,
@@ -187,7 +191,7 @@ class AlertaController extends Controller
                     continue;
                 }
 
-                $resultado = $sender->send($usuario->telefone, $mensagem);
+                $resultado = $sender->send($usuario->telefone, $mensagem, $parametros);
 
                 if ($resultado['status'] === 'enviado') {
                     $enviados++;
@@ -202,7 +206,7 @@ class AlertaController extends Controller
                     'telefone' => $usuario->telefone,
                     'status' => $resultado['status'],
                     'resultado' => $resultado['resultado'],
-                ]);
+                ] + $this->dadosMeta($resultado));
             }
 
             $status = $falhas === 0 ? 'sucesso' : ($enviados > 0 ? 'parcial' : 'falha');
@@ -252,6 +256,27 @@ class AlertaController extends Controller
         $disparo->load(['postagem', 'modelo', 'administrador', 'destinatarios']);
 
         return view('alertas.show', compact('disparo'));
+    }
+
+    /** Parâmetros do template da Meta: {{1}} título, {{2}} tipo, {{3}} data. */
+    private function parametrosTemplate(Postagem $postagem): array
+    {
+        return [
+            $postagem->titulo,
+            $postagem->rotuloTipo(),
+            $postagem->data_publicacao->format('d/m/Y'),
+        ];
+    }
+
+    /** O que o envio devolveu para o rastreio pela Meta (vazio no simulado). */
+    private function dadosMeta(array $resultado): array
+    {
+        return [
+            'wamid' => $resultado['wamid'] ?? null,
+            'status_meta' => null,
+            'erro_codigo' => $resultado['erro_codigo'] ?? null,
+            'erro_mensagem' => $resultado['erro_mensagem'] ?? null,
+        ];
     }
 
     private function montarMensagem(string $modelo, Postagem $postagem): string
