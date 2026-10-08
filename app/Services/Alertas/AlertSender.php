@@ -5,9 +5,14 @@ namespace App\Services\Alertas;
 interface AlertSender
 {
     /**
-     * Simula o envio e devolve o resultado que será registrado no histórico.
+     * Envia o alerta e devolve o resultado que será registrado no histórico.
      *
-     * @return array{status: string, resultado: string}
+     * $mensagem é o texto já montado (o que o histórico mostra). $parametros
+     * são os valores do template da Meta, na ordem {{1}}, {{2}}, {{3}}:
+     * título, tipo e data da publicação.
+     *
+     * @param  list<string>  $parametros
+     * @return array{status: 'enviado'|'falha', resultado: string, wamid?: string, erro_codigo?: int|null, erro_mensagem?: string|null}
      */
-    public function send(string $telefone, string $mensagem): array;
+    public function send(string $telefone, string $mensagem, array $parametros = []): array;
 }

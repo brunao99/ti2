@@ -6,6 +6,7 @@ use App\Http\Controllers\PainelController;
 use App\Http\Controllers\PostagemController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\AlertaController;
+use App\Http\Controllers\WhatsAppWebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,6 +22,12 @@ use Illuminate\Support\Facades\Route;
 // A raiz leva cada um ao seu lugar. Um redirect fixo para /login criava um
 // loop para quem já estava logado: /login devolvia a pessoa para a raiz.
 Route::get('/', fn () => redirect()->route(auth()->check() ? 'painel.inicio' : 'login'));
+
+// ------------------------------------------------- webhook da Meta (WhatsApp)
+// Sem login e fora do CSRF (bootstrap/app.php): quem chama é a Meta. O GET é
+// a verificação da URL; o POST traz os eventos, conferidos pela assinatura.
+Route::get('/webhook/whatsapp', [WhatsAppWebhookController::class, 'verificar'])->name('webhook.whatsapp.verificar');
+Route::post('/webhook/whatsapp', [WhatsAppWebhookController::class, 'receber'])->name('webhook.whatsapp.receber');
 
 // ------------------------------------------------------------------- público
 Route::middleware('guest')->group(function () {

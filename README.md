@@ -142,16 +142,27 @@ falharam; ignorados ficam fora, porque nada foi tentado) e cada disparo com
 falha ganha o botão **Reenviar**. O reenvio tenta de novo só quem falhou,
 confere outra vez a autorização e conta as tentativas de cada destinatário.
 
-O envio ainda é **simulado** (`SimulatedWhatsAppSender`). Para ver falhas e o
-reenvio funcionando na homologação, defina `ALERTA_SIMULACAO_FALHA` com a
-porcentagem de envios que devem falhar (ex.: `30`); o padrão é `0`.
+O envio é escolhido por `WHATSAPP_DRIVER`:
 
-Antes de ligar a API real da Meta:
+- **`simulado`** (padrão) — nada sai do servidor. `ALERTA_SIMULACAO_FALHA`
+  define a porcentagem de envios que falham de propósito (ex.: `30`), para
+  mostrar o reenvio.
+- **`meta`** — envia pela WhatsApp Cloud API (`MetaWhatsAppSender`), sempre
+  por template aprovado, com `{{1}}` título, `{{2}}` tipo e `{{3}}` data. As
+  variáveis estão no `.env.example`.
+
+O webhook da Meta fica em **`/webhook/whatsapp`** (GET verifica o
+`WHATSAPP_VERIFY_TOKEN`; POST exige a assinatura `X-Hub-Signature-256` com o
+`WHATSAPP_APP_SECRET`). Os status chegam pelo `wamid`: entregue e lido
+aparecem no histórico, e uma falha vira "falha" com código e motivo — o que
+libera o botão Reenviar. Mensagens recebidas, por enquanto, só vão para o log.
+
+Antes de ligar para valer:
 
 1. **MySQL no Railway** — com SQLite, cada deploy apaga histórico e datas de
    autorização, justamente a prova do opt-in.
-2. **Modelos** precisam virar templates aprovados pela Meta (variáveis
-   `{{1}}`, `{{2}}`); texto livre não é aceito para iniciar conversa.
+2. A tela **Modelos** ainda guarda texto livre, usado só no histórico; o que
+   vai para a Meta é o template de `WHATSAPP_TEMPLATE`.
 3. **Fila** para o envio: hoje ele acontece dentro da requisição.
 
 ## Onde está cada coisa

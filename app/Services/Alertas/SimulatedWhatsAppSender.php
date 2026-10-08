@@ -10,7 +10,7 @@ namespace App\Services\Alertas;
  */
 class SimulatedWhatsAppSender implements AlertSender
 {
-    public function send(string $telefone, string $mensagem): array
+    public function send(string $telefone, string $mensagem, array $parametros = []): array
     {
         $chanceDeFalha = (int) config('services.alertas.simulacao_falha', 0);
 

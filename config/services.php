@@ -34,6 +34,20 @@ return [
         'simulacao_falha' => (int) env('ALERTA_SIMULACAO_FALHA', 0),
     ],
 
+    // WhatsApp Cloud API (Meta). Com o driver "simulado" (padrão) nada sai
+    // do servidor; com "meta" os alertas vão de verdade pelo template aprovado.
+    'whatsapp' => [
+        'driver'          => env('WHATSAPP_DRIVER', 'simulado'),
+        'access_token'    => env('WHATSAPP_ACCESS_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'waba_id'         => env('WHATSAPP_WABA_ID'),
+        'graph_version'   => env('WHATSAPP_GRAPH_VERSION', 'v23.0'),
+        'verify_token'    => env('WHATSAPP_VERIFY_TOKEN'),
+        'app_secret'      => env('WHATSAPP_APP_SECRET'),
+        'template'        => env('WHATSAPP_TEMPLATE'),
+        'template_lang'   => env('WHATSAPP_TEMPLATE_LANG', 'pt_BR'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

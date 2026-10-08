@@ -29,6 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
          * o container direto — no Railway o tráfego só entra pela borda deles.
          * Numa VPS com a aplicação exposta, troque pelo IP real do proxy.
          */
+        // O webhook da Meta não tem sessão nem token CSRF; sem esta exceção
+        // todo POST dela tomaria 419. A proteção dele é a assinatura
+        // X-Hub-Signature-256, conferida no WhatsAppWebhookController.
+        $middleware->validateCsrfTokens(except: ['webhook/whatsapp']);
+
         // Quem já está logado e abre /login vai para o painel. Sem isso o
         // Laravel manda para "/", que por sua vez mandava de volta ao login.
         $middleware->redirectUsersTo('/painel');

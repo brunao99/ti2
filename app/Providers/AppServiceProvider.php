@@ -5,13 +5,19 @@ namespace App\Providers;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use App\Services\Alertas\AlertSender;
+use App\Services\Alertas\MetaWhatsAppSender;
 use App\Services\Alertas\SimulatedWhatsAppSender;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->bind(AlertSender::class, SimulatedWhatsAppSender::class);
+        // WHATSAPP_DRIVER=meta envia de verdade; qualquer outro valor (o
+        // padrão é "simulado") mantém o envio simulado. Resolvido a cada uso,
+        // então trocar a variável não exige mexer em código.
+        $this->app->bind(AlertSender::class, fn ($app) => config('services.whatsapp.driver') === 'meta'
+            ? $app->make(MetaWhatsAppSender::class)
+            : $app->make(SimulatedWhatsAppSender::class));
     }
 
     public function boot(): void
