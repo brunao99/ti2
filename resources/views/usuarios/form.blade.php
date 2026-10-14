@@ -35,6 +35,18 @@
       <p class="muted" style="font-size:.85rem;margin-top:.3rem">É com ele que a pessoa faz login.</p>
     </div>
 
+    {{-- Só para Cliente: o JS abaixo esconde quando outro perfil é escolhido,
+         e o controller descarta o valor nesse caso. --}}
+    <div class="field" id="campo-contrato">
+      <label class="label" for="contrato">Contrato</label>
+      <input class="inp-box" id="contrato" name="contrato" maxlength="50"
+             placeholder="Ex.: 225/2025"
+             value="{{ old('contrato', $usuario->contrato) }}">
+      <p class="muted" style="font-size:.85rem;margin-top:.3rem">
+        Número do contrato com a prefeitura. Sai no cabeçalho do relatório.
+      </p>
+    </div>
+
     <div class="field">
       <label class="label" for="email">E-mail</label>
       <input class="inp-box" id="email" name="email" type="email"
@@ -78,18 +90,6 @@
           </option>
         @endforeach
       </select>
-    </div>
-
-    {{-- Só para Cliente: o JS abaixo esconde quando outro perfil é escolhido,
-         e o controller descarta o valor nesse caso. --}}
-    <div class="field" id="campo-contrato">
-      <label class="label" for="contrato">Contrato</label>
-      <input class="inp-box" id="contrato" name="contrato" maxlength="50"
-             placeholder="Ex.: 225/2025"
-             value="{{ old('contrato', $usuario->contrato) }}">
-      <p class="muted" style="font-size:.85rem;margin-top:.3rem">
-        Número do contrato com a prefeitura. Sai no cabeçalho do relatório.
-      </p>
     </div>
 
     <div class="field">
