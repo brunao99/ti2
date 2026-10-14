@@ -140,6 +140,14 @@ class PostagemController extends Controller
 
     private function validado(Request $request): array
     {
+        // Link colado sem protocolo (instagram.com/p/…) ganha https://, senão
+        // a validação recusaria e o link não abriria no relatório.
+        $link = trim((string) $request->input('link'));
+        if ($link !== '' && ! preg_match('#^[a-z][a-z0-9+.-]*://#i', $link)) {
+            $link = 'https://' . $link;
+        }
+        $request->merge(['link' => $link !== '' ? $link : null]);
+
         $dados = $request->validate([
             'tipo'            => ['required', Rule::in(Postagem::tiposValidos())],
             'titulo'          => ['required', 'string', 'max:255'],
@@ -147,11 +155,14 @@ class PostagemController extends Controller
             'data_publicacao' => ['required', 'date'],
             'mes_referencia'  => ['required', 'regex:/^\d{4}-\d{2}$/'],
             'situacao'        => ['required', 'in:rascunho,publicado'],
+            'link'            => ['nullable', 'url:http,https', 'max:2048'],
         ], [
             'titulo.required'          => 'O título é obrigatório.',
             'data_publicacao.required' => 'Informe a data da publicação.',
             'tipo.required'            => 'Escolha o tipo de conteúdo.',
             'texto.max'                => 'O texto da publicação ficou longo demais.',
+            'link.url'                 => 'Informe um link válido, por exemplo https://www.gov.br/...',
+            'link.max'                 => 'O link ficou longo demais.',
         ]);
 
         // O texto chega como HTML do editor. Gravar cru abriria XSS para quem

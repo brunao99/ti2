@@ -50,7 +50,7 @@ class Postagem extends Model
 
     protected $fillable = [
         'tipo', 'titulo', 'texto', 'data_publicacao',
-        'mes_referencia', 'situacao', 'alerta_enviado', 'user_id',
+        'mes_referencia', 'situacao', 'alerta_enviado', 'user_id', 'link',
     ];
 
     /**

@@ -80,6 +80,18 @@
       </select>
     </div>
 
+    {{-- Só para Cliente: o JS abaixo esconde quando outro perfil é escolhido,
+         e o controller descarta o valor nesse caso. --}}
+    <div class="field" id="campo-contrato">
+      <label class="label" for="contrato">Contrato</label>
+      <input class="inp-box" id="contrato" name="contrato" maxlength="50"
+             placeholder="Ex.: 225/2025"
+             value="{{ old('contrato', $usuario->contrato) }}">
+      <p class="muted" style="font-size:.85rem;margin-top:.3rem">
+        Número do contrato com a prefeitura. Sai no cabeçalho do relatório.
+      </p>
+    </div>
+
     <div class="field">
       <label class="check">
         <input type="checkbox" name="ativo" value="1" @checked(old('ativo', $usuario->ativo ?? true))>
@@ -97,3 +109,23 @@
   </form>
 
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+  var perfil = document.getElementById('perfil');
+  var campo = document.getElementById('campo-contrato');
+  var input = document.getElementById('contrato');
+  if (!perfil || !campo) return;
+
+  function atualizar() {
+    var cliente = perfil.value === 'client';
+    campo.hidden = !cliente;
+    input.required = cliente;
+  }
+
+  perfil.addEventListener('change', atualizar);
+  atualizar();
+})();
+</script>
+@endpush
