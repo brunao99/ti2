@@ -196,6 +196,7 @@ class AlertaTest extends TestCase
             'usuario' => $cliente->usuario,
             'email' => $cliente->email,
             'perfil' => User::CLIENT,
+            'contrato' => '225/2025',
             'ativo' => '1',
             'telefone' => '31 99999-0003',
             'alerta_consentimento_em' => now()->toDateTimeString(),
@@ -216,6 +217,7 @@ class AlertaTest extends TestCase
             'usuario' => $cliente->usuario,
             'email' => $cliente->email,
             'perfil' => User::CLIENT,
+            'contrato' => '225/2025',
             'ativo' => '1',
         ];
 

@@ -37,6 +37,13 @@
 
     <h1 class="{{ $postagem->classeCor() }}">{{ $postagem->titulo }}</h1>
 
+    @if ($postagem->link)
+      <p class="fonte">
+        <span class="label">Fonte</span>
+        <a href="{{ $postagem->link }}" target="_blank" rel="noopener noreferrer">{{ $postagem->link }}</a>
+      </p>
+    @endif
+
     {{-- O HTML aqui já passou pelo SanitizadorHtml na gravação, então pode ser
          impresso sem escapar. Publicações antigas, de antes do editor, são texto
          puro: nesse caso escapamos e preservamos as quebras de linha. --}}

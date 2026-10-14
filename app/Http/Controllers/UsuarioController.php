@@ -99,11 +99,14 @@ class UsuarioController extends Controller
         // Guarda só dígitos com DDI, o formato da API da Meta. A máscara é da tela.
         $request->merge(['telefone' => Telefone::normalizar($request->input('telefone'))]);
 
-        return $request->validate([
+        $dados = $request->validate([
             'nome'     => ['required', 'string', 'max:255'],
             'usuario'  => ['required', 'string', 'max:60', Rule::unique('users', 'usuario')->ignore($id)],
             'email'    => ['required', 'email', Rule::unique('users', 'email')->ignore($id)],
             'telefone' => ['nullable', 'regex:' . Telefone::FORMATO],
+            // Contrato da prefeitura: obrigatório para Cliente, porque o
+            // relatório dela sai com ele no cabeçalho. Os outros perfis não têm.
+            'contrato' => ['nullable', 'required_if:perfil,' . User::CLIENT, 'string', 'max:50'],
             'password' => [$usuario ? 'nullable' : 'required', 'string', 'min:8'],
             // Impede o ADM de criar um Master mexendo no HTML do formulário.
             'perfil'   => ['required', Rule::in($request->user()->perfisQuePodeAtribuir())],
@@ -113,6 +116,12 @@ class UsuarioController extends Controller
             'telefone.regex'   => 'Informe o WhatsApp com DDD, por exemplo (31) 99999-0001.',
             'password.min'     => 'A senha precisa de pelo menos 8 caracteres.',
             'perfil.in'        => 'Seu perfil não pode atribuir esse nível de acesso.',
+            'contrato.required_if' => 'Informe o número do contrato da prefeitura.',
         ]);
+
+        // Trocar o perfil de Cliente para outro apaga o contrato.
+        $dados['contrato'] = $dados['perfil'] === User::CLIENT ? trim((string) $dados['contrato']) : null;
+
+        return $dados;
     }
 }

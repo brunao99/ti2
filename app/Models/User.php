@@ -21,7 +21,7 @@ class User extends Authenticatable
     // alerta_consentimento_em fica de fora de propósito: só a própria pessoa
     // autoriza, pela tela Minha conta. Assim nenhum formulário do ADM consegue
     // marcar o consentimento por ela, nem editando o HTML.
-    protected $fillable = ['nome', 'usuario', 'email', 'password', 'perfil', 'ativo', 'telefone'];
+    protected $fillable = ['nome', 'usuario', 'email', 'password', 'perfil', 'ativo', 'telefone', 'contrato'];
 
     protected $hidden = ['password', 'remember_token'];
 

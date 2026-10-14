@@ -43,6 +43,16 @@
                  placeholder="Ex.: Edital de chamamento público 012/2026" required>
         </div>
 
+        <div class="field">
+          <label class="label" for="link">Link da fonte</label>
+          <input class="inp-box" id="link" name="link" type="text" inputmode="url"
+                 value="{{ old('link', $postagem->link) }}"
+                 placeholder="Ex.: https://www.gov.br/... ou https://www.instagram.com/p/...">
+          <p class="muted" style="font-size:.85rem;margin-top:.3rem">
+            De onde veio a informação. Sai na coluna LINK do relatório da prefeitura.
+          </p>
+        </div>
+
         <p class="label" style="margin-bottom:.8rem">Texto da publicação</p>
 
         {{-- O textarea é o campo de verdade: é ele que vai no POST.
