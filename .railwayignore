@@ -20,6 +20,7 @@ database/*.sqlite-journal
 /storage/framework/cache/data/*
 /storage/framework/sessions/*
 /storage/framework/views/*
+/storage/fonts/*
 /bootstrap/cache/*.php
 /public/build
 /public/hot

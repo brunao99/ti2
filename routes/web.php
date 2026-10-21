@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContaController;
 use App\Http\Controllers\PainelController;
 use App\Http\Controllers\PostagemController;
+use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\AlertaController;
 use App\Http\Controllers\WhatsAppWebhookController;
@@ -93,4 +94,9 @@ Route::middleware(['auth', 'perfil:master,adm'])->group(function () {
     Route::get('/alertas/modelos/{modelo}/editar', fn (\App\Models\AlertTemplate $modelo) => view('alertas.modelos.form', compact('modelo')))
         ->name('alertas.modelos.editar');
     Route::put('/alertas/modelos/{modelo}', [AlertaController::class, 'salvarModelo'])->name('alertas.modelos.atualizar');
+
+    // Relatório da prefeitura: publicações do período e alertas entregues.
+    Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios.index');
+    Route::get('/relatorios/previa', [RelatorioController::class, 'previa'])->name('relatorios.previa');
+    Route::post('/relatorios', [RelatorioController::class, 'gerar'])->name('relatorios.gerar');
 });

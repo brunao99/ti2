@@ -7,6 +7,7 @@
 
 @section('acoes')
   @if (auth()->user()->podeGerenciarPostagens())
+    <a class="btn btn-ghost" href="{{ route('relatorios.index') }}" data-modal-relatorio>Gerar relatório</a>
     <a class="btn" href="{{ route('postagens.create') }}">Nova publicação</a>
   @endif
 @endsection
@@ -19,6 +20,9 @@
       <a class="btn btn-sm" href="{{ route('postagens.create') }}">+ Nova postagem</a>
     @endif
   </div>
+  @if (auth()->user()->podeGerenciarPostagens())
+    <a class="m-only btn btn-ghost btn-block m-relatorio" href="{{ route('relatorios.index') }}" data-modal-relatorio>Gerar relatório</a>
+  @endif
 
   {{-- Filtro por tipo e busca por título. Tudo via GET, para o filtro
        sobreviver ao recarregar e poder ser compartilhado por link. --}}

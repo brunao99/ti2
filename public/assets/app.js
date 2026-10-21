@@ -55,13 +55,23 @@
     }
     if (e.target.classList.contains("modal")) fecharModal(e.target);
 
-    // ---- enviar alerta numa janela sobre a página ---------------------------
-    // O link continua apontando para a página de envio: se o pedido falhar
+    // ---- enviar alerta e gerar relatório numa janela sobre a página --------
+    // O link continua apontando para a página inteira: se o pedido falhar
     // (alerta já enviado, sessão expirada), segue o link normalmente.
-    var envio = e.target.closest("a[data-modal-envio]");
-    if (envio && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+    var remota = e.target.closest("a[data-modal-envio], a[data-modal-relatorio]");
+    if (remota && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
       e.preventDefault();
-      abrirEnvio(envio);
+      abrirRemota(remota);
+    }
+
+    // ---- atalhos de período do relatório --------------------------------
+    var atalho = e.target.closest("[data-relatorio] [data-periodo]");
+    if (atalho) {
+      var formRel = atalho.closest("[data-relatorio]");
+      formRel.querySelector("[name=inicio]").value = atalho.getAttribute("data-inicio");
+      formRel.querySelector("[name=fim]").value = atalho.getAttribute("data-fim");
+      marcarAtalho(formRel);
+      atualizarRelatorio(formRel);
     }
 
     // ---- grupos de botões (pills / seg) ---------------------------------
@@ -103,7 +113,7 @@
     origemModal = null;
   }
 
-  function abrirEnvio(link) {
+  function abrirRemota(link) {
     if (link.getAttribute("aria-busy") === "true") return;
     link.setAttribute("aria-busy", "true");
 
@@ -123,6 +133,7 @@
         }
         modal.innerHTML = html;
         atualizarPreview(modal.querySelector("[data-envio]"));
+        iniciarRelatorio(modal.querySelector("[data-relatorio]"));
         abrirModal(modal, link);
       })
       .catch(function () { window.location.href = link.href; })
@@ -159,6 +170,154 @@
     var btn = form.querySelector("button[type=submit]");
     if (btn) { btn.disabled = true; btn.textContent = "Enviando…"; }
   });
+
+  // ---- relatório da prefeitura ---------------------------------------------
+  // Atalho marcado = o período nos campos é exatamente o dele.
+  function marcarAtalho(form) {
+    var de = form.querySelector("[name=inicio]").value;
+    var ate = form.querySelector("[name=fim]").value;
+    form.querySelectorAll("[data-periodo]").forEach(function (b) {
+      var on = b.getAttribute("data-inicio") === de && b.getAttribute("data-fim") === ate;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+
+  function camposRelatorio(form) {
+    var formato = form.querySelector("[name=formato]:checked");
+    return {
+      cliente: form.querySelector("[name=cliente]").value,
+      inicio: form.querySelector("[name=inicio]").value,
+      fim: form.querySelector("[name=fim]").value,
+      formato: formato ? formato.value : "xlsx"
+    };
+  }
+
+  // "Gerar e baixar" só fica ativo com cliente e período válidos; a prévia
+  // é pedida ao servidor um instante depois da última mudança.
+  var esperaPrevia = null;
+  function atualizarRelatorio(form) {
+    if (!form) return;
+    var c = camposRelatorio(form);
+    form.querySelector("[data-gerar]").disabled = !(c.cliente && c.inicio && c.fim && c.inicio <= c.fim);
+    clearTimeout(esperaPrevia);
+    esperaPrevia = setTimeout(function () { buscarPrevia(form); }, 250);
+  }
+
+  function buscarPrevia(form) {
+    var c = camposRelatorio(form);
+    var pedido = form.pedidoPrevia = (form.pedidoPrevia || 0) + 1;
+    fetch(form.getAttribute("data-previa") + "?" + new URLSearchParams(c).toString(), {
+      headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
+    })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (d) {
+        if (pedido !== form.pedidoPrevia) return; // chegou depois de uma resposta mais nova
+        form.querySelector("[data-previa-publicacoes]").textContent = d.publicacoes === null ? "—" : d.publicacoes;
+        form.querySelector("[data-previa-alertas]").textContent = d.alertas === null ? "—" : d.alertas;
+        form.querySelector("[data-previa-arquivo]").textContent = d.arquivo
+          || (d.publicacoes === null ? "Confira o período: a data final vem antes da inicial."
+                                     : "Selecione o cliente para ver o nome do arquivo.");
+      })
+      .catch(function () {});
+  }
+
+  function iniciarRelatorio(form) {
+    if (!form) return;
+    marcarAtalho(form);
+    atualizarRelatorio(form);
+  }
+
+  function mostrarErros(form, erros) {
+    var caixa = form.querySelector("[data-erros]");
+    caixa.innerHTML = "";
+    erros.forEach(function (m) {
+      var p = document.createElement("p");
+      p.textContent = m;
+      caixa.appendChild(p);
+    });
+    caixa.hidden = erros.length === 0;
+    if (erros.length) caixa.scrollIntoView({ block: "nearest" });
+  }
+
+  // Nome do arquivo pelo cabeçalho da resposta; a forma filename* guarda
+  // os acentos ("Relatório Itaúna-MG ...").
+  function nomeDoArquivo(resposta) {
+    var cd = resposta.headers.get("Content-Disposition") || "";
+    var utf = /filename\*=utf-8''([^;]+)/i.exec(cd);
+    if (utf) { try { return decodeURIComponent(utf[1]); } catch (e5) {} }
+    var simples = /filename="?([^";]+)"?/i.exec(cd);
+    return simples ? simples[1] : "relatorio";
+  }
+
+  function baixar(blob, nome) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = nome;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  document.addEventListener("change", function (e) {
+    var rel = e.target.closest("[data-relatorio]");
+    if (!rel) return;
+    if (e.target.type === "date") marcarAtalho(rel);
+    atualizarRelatorio(rel);
+  });
+
+  // O arquivo é baixado sem sair da tela: erro de validação aparece dentro
+  // da janela. Sem fetch, o formulário segue o envio normal.
+  document.addEventListener("submit", function (e) {
+    var form = e.target.closest("[data-relatorio]");
+    if (!form || !window.fetch || !window.URL || !URL.createObjectURL) return;
+    e.preventDefault();
+
+    var botao = form.querySelector("[data-gerar]");
+    if (botao.disabled) return;
+    var rotulo = botao.textContent;
+    botao.disabled = true;
+    botao.textContent = "Gerando…";
+    mostrarErros(form, []);
+
+    fetch(form.action, {
+      method: "POST",
+      body: new FormData(form),
+      headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
+    })
+      .then(function (r) {
+        if (r.status === 422) {
+          return r.json().then(function (d) {
+            var erros = [];
+            Object.keys(d.errors || {}).forEach(function (k) { erros = erros.concat(d.errors[k]); });
+            throw { erros: erros.length ? erros : [d.message] };
+          });
+        }
+        if (r.status === 419) throw { erros: ["A sessão expirou. Recarregue a página e tente de novo."] };
+        if (!r.ok) throw { erros: ["Não foi possível gerar o relatório. Tente de novo em instantes."] };
+        return r.blob().then(function (blob) { return { blob: blob, nome: nomeDoArquivo(r) }; });
+      })
+      .then(function (arquivo) {
+        baixar(arquivo.blob, arquivo.nome);
+        var modal = form.closest(".modal");
+        if (modal) fecharModal(modal);
+      })
+      .catch(function (falha) {
+        mostrarErros(form, falha && falha.erros
+          ? falha.erros
+          : ["Não foi possível gerar o relatório. Verifique a conexão e tente de novo."]);
+      })
+      .then(function () {
+        if (!document.body.contains(form)) return; // a janela já fechou
+        botao.textContent = rotulo;
+        atualizarRelatorio(form);
+      });
+  });
+
+  // Página do relatório (fora da janela).
+  document.querySelectorAll("[data-relatorio]").forEach(iniciarRelatorio);
 
   // ---- filtro da listagem de publicações ---------------------------------
   var busca = document.getElementById("busca");
