@@ -165,17 +165,43 @@ Antes de ligar para valer:
    vai para a Meta é o template de `WHATSAPP_TEMPLATE`.
 3. **Fila** para o envio: hoje ele acontece dentro da requisição.
 
+## Relatório da prefeitura
+
+Botão **Gerar relatório** no topo de Publicações (Master e ADM). Abre uma
+janela com cliente, período (atalhos: mês anterior, mês atual, últimos 30
+dias) e formato — **XLSX** para conferir e editar, **PDF** para enviar. A
+prévia mostra quantas publicações e alertas vão entrar e o nome do arquivo:
+`Relatório Itaúna-MG 01-09-2026 a 30-09-2026.xlsx`.
+
+- **Cabeçalho**: dados fixos da Algoritmos; município = nome do usuário
+  cliente; contrato = campo `contrato` do cadastro. Cliente sem contrato não
+  gera relatório.
+- **Publicações**: só as publicadas, com data de publicação no período.
+- **Alertas**: só os **entregues** àquele cliente — status `enviado` e, com
+  rastreio da Meta, `delivered` ou `read`. A data é a do disparo.
+- O período vale no horário de Brasília (o banco grava em UTC).
+
+Os dados saem de `app/Services/Relatorios/RelatorioPrefeitura.php`; a
+planilha (PhpSpreadsheet) e o PDF (Dompdf) só desenham. Fontes Lato e
+Oswald (licença OFL) e a logo ficam em `resources/relatorios/`. O build
+precisa das extensões `gd` e `zip`, declaradas no `composer.json`.
+
+Com SQLite no Railway, cada deploy apaga o histórico de alertas — o relatório
+só fica completo depois do MySQL.
+
 ## Onde está cada coisa
 
 ```
 app/Models/            User, Postagem, Anexo, Alert* (modelo, disparo, destinatário)
-app/Http/Controllers/  Auth, Painel, Postagem, Usuario, Alerta, Conta
+app/Http/Controllers/  Auth, Painel, Postagem, Usuario, Alerta, Conta, Relatorio
 app/Http/Middleware/   VerificaPerfil
-app/Services/Alertas/  envio do alerta (hoje simulado)
+app/Services/Alertas/  envio do alerta (simulado ou WhatsApp Cloud API)
+app/Services/Relatorios/ dados, planilha e PDF do relatório da prefeitura
 app/Support/           SanitizadorHtml, Telefone
 database/migrations/   tabelas + ajuste de tipos + contas e dados iniciais
 database/seeders/      mesmo conteúdo, para uso local
-resources/views/       login, painel, postagens, usuários, alertas, minha conta
+resources/views/       login, painel, postagens, usuários, alertas, relatórios, minha conta
+resources/relatorios/  logo e fontes do relatório
 public/assets/         style.css, app.js e editor.js
 routes/web.php         rotas agrupadas por permissão
 .railwayignore         o que não sobe no deploy

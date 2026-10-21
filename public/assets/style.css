@@ -835,3 +835,83 @@ a.side-user.on{background:rgba(255,255,255,.1)}
 /* Link da fonte na visualização da publicação */
 .doc .fonte{display:flex;gap:.6rem;align-items:baseline;margin:-.4rem 0 1.4rem;font-size:.9rem;min-width:0}
 .doc .fonte a{overflow-wrap:anywhere}
+
+/* ---------- Gerar relatório (janela e página) ---------- */
+.relatorio{max-width:600px;border-radius:8px;box-shadow:0 24px 60px rgba(10,20,30,.35)}
+.relatorio .modal-head{padding:1.2rem 1.6rem}
+.relatorio .modal-head h2{font-size:1.5rem;margin-top:.2rem}
+.relatorio .x{display:inline-flex;align-items:center;justify-content:center;border-radius:4px;transition:.15s}
+.relatorio .x:hover{background:rgba(255,255,255,.12);text-decoration:none}
+.relatorio .modal-body{display:grid;gap:1.15rem;padding:1.4rem 1.6rem}
+.relatorio .modal-foot{justify-content:flex-end;padding:1rem 1.6rem}
+.relatorio .btn[disabled]{opacity:.5;cursor:not-allowed}
+
+.rel-campo{border:0;padding:0;margin:0;min-width:0}
+.rel-campo > .label, .rel-campo > legend{display:block;margin-bottom:.5rem;padding:0}
+.rel-ajuda{font-size:.82rem;color:var(--muted);margin-top:.45rem}
+
+.rel-datas{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.rel-data{display:flex;align-items:center;gap:.6rem}
+.rel-data span{font-size:.85rem;color:var(--muted);flex:none;min-width:1.7rem}
+.rel-atalhos{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem}
+.rel-atalhos .pill{font-size:.8rem;padding:.4rem .9rem}
+.rel-atalhos .pill:not(.on):hover{border-color:var(--muted)}
+
+/* Formato: o cartão inteiro é clicável e marca o escolhido. */
+.rel-formatos{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.rel-formato{display:flex;align-items:center;gap:.75rem;border:1px solid var(--line);border-radius:6px;
+  padding:.65rem .9rem;cursor:pointer;transition:.15s}
+.rel-formato:hover{border-color:var(--muted)}
+.rel-formato input{width:18px;height:18px;accent-color:var(--navy);flex:none}
+.rel-formato:has(input:checked){border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy);background:var(--surface)}
+.rel-formato:has(input:focus-visible){outline:2px solid var(--blue);outline-offset:2px}
+.rel-formato-texto b{display:block;font-size:.95rem}
+.rel-formato-texto small{color:var(--muted);font-size:.78rem}
+.rel-icone{display:flex;align-items:flex-end;justify-content:center;width:32px;height:40px;flex:none;
+  padding-bottom:5px;border-radius:3px;color:#fff;font-size:.52rem;font-weight:700;letter-spacing:.05em;
+  clip-path:polygon(0 0,68% 0,100% 24%,100% 100%,0 100%)}
+.rel-icone-xlsx{background:#1f7a4d}
+.rel-icone-pdf{background:#c0392b}
+:root[data-theme="dark"] .rel-formato input{accent-color:var(--blue)}
+:root[data-theme="dark"] .rel-formato:has(input:checked){border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .rel-formato input{accent-color:var(--blue)}
+  :root:not([data-theme="light"]) .rel-formato:has(input:checked){border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
+}
+
+/* Prévia: números à esquerda, nome do arquivo à direita. */
+.rel-previa{background:var(--surface);border-radius:6px;padding:.9rem 1.1rem}
+.rel-previa-linha{display:flex;align-items:center;gap:1.4rem;margin-top:.45rem}
+.rel-numeros{display:flex;gap:1.8rem;flex:none}
+.rel-numeros b{display:block;font-family:var(--cond);font-size:1.8rem;line-height:1;color:var(--ink)}
+.rel-numeros span{font-size:.8rem;color:var(--muted)}
+.rel-arquivo{flex:1;min-width:0;font-size:.84rem;padding-left:1.4rem;border-left:1px solid var(--line);overflow-wrap:anywhere}
+.rel-regra{font-size:.78rem;color:var(--muted);margin-top:.7rem}
+
+.rel-erro{background:#fdecec;border-left:3px solid #c0392b;color:#8e2a20;padding:.8rem 1rem;font-size:.9rem;border-radius:3px}
+.rel-erro[hidden]{display:none}
+.rel-erro p + p{margin-top:.3rem}
+:root[data-theme="dark"] .rel-erro{background:#331a18;color:#f0a79e}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .rel-erro{background:#331a18;color:#f0a79e}}
+
+/* Página do relatório: o mesmo cartão, fora da janela. */
+.envio-pagina .relatorio{box-shadow:none;border:1px solid var(--line);overflow:visible;max-height:none}
+.envio-pagina .relatorio .modal-head{border-radius:8px 8px 0 0}
+
+/* No celular a janela vira painel que sobe do rodapé, como a de alerta. */
+@media (max-width:900px){
+  .relatorio{max-height:92vh;border-radius:12px 12px 0 0}
+  .relatorio .modal-head{padding:1.1rem 1.2rem}
+  .relatorio .modal-body{padding:1.2rem;gap:1.1rem}
+  .relatorio .modal-foot{flex-direction:column;align-items:stretch;padding:.9rem 1.2rem}
+  .relatorio .modal-foot .acts{display:grid;grid-template-columns:1fr 1fr}
+  .envio-pagina .relatorio{border-radius:8px}
+  .m-relatorio{display:flex;margin:-.2rem 0 1rem}
+}
+@media (max-width:520px){
+  .rel-datas{grid-template-columns:1fr;gap:.6rem}
+  .rel-formato{padding:.7rem}
+  .rel-formato-texto small{display:none}
+  .rel-previa-linha{flex-direction:column;align-items:flex-start;gap:.7rem}
+  .rel-arquivo{padding:.7rem 0 0;border-left:0;border-top:1px solid var(--line);width:100%}
+}
