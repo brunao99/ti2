@@ -8,15 +8,15 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Worksheet\PageSetup;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 /**
- * Relatório em XLSX, no layout do blueprint estilizado: faixa azul-marinho
- * com a logo, identificação, indicadores, publicações, alertas e fechamento.
- * Tudo numa aba, pronta para imprimir em A4.
+ * Relatório em XLSX no layout da planilha que a Algoritmos já envia às
+ * prefeituras: cabeçalho em duas linhas, tabela com faixa verde, publicações,
+ * o bloco "ALERTAS POR WHATSAPP" e o local e data no fim. O PDF segue o
+ * layout novo (PdfRelatorio); os dados dos dois vêm de RelatorioPrefeitura.
  *
  * Texto que vem do sistema entra sempre como texto explícito: um título que
  * comece com "=" viraria fórmula no Excel.
@@ -25,20 +25,11 @@ class PlanilhaRelatorio
 {
     public const MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
-    // Identidade: as mesmas cores do painel (public/assets/style.css).
-    private const NAVY = '133049';
-    private const AZUL = '2B6CB0';
-    private const TEAL = '1A6383';
-    private const TINTA = '1A2B3C';
-    private const CINZA = '6B7280';
-    private const LINHA = 'DDE3EA';
-    private const FUNDO = 'F4F6F9';
-    private const ZEBRA = 'FAFBFC';
-    private const SUAVE = 'B9C7D6';
-    private const FONTE = 'Arial';
-
-    /** Largura das colunas A–E, em caracteres. */
-    private const LARGURAS = ['A' => 7, 'B' => 13, 'C' => 28, 'D' => 58, 'E' => 42];
+    // Cores e larguras do modelo do cliente.
+    private const VERDE = '00B050';
+    private const AZUL_LINK = '0070C0';
+    private const LARGURAS = ['A' => 5.33, 'B' => 11.11, 'C' => 55.11, 'D' => 24.44, 'E' => 73.11];
+    private const ALTURA_LINHA = 39;
 
     private Worksheet $aba;
 
@@ -50,21 +41,18 @@ class PlanilhaRelatorio
             ->setCompany(RelatorioPrefeitura::EMPRESA)
             ->setTitle($relatorio->nomeArquivo('xlsx'))
             ->setSubject(RelatorioPrefeitura::TITULO);
-        $planilha->getDefaultStyle()->getFont()->setName(self::FONTE)->setSize(9)->getColor()->setRGB(self::TINTA);
+        $planilha->getDefaultStyle()->getFont()->setName('Arial')->setSize(8);
 
         $this->aba = $planilha->getActiveSheet();
         $this->aba->setTitle('Relatório');
-        $this->aba->setShowGridlines(false);
         foreach (self::LARGURAS as $coluna => $largura) {
             $this->aba->getColumnDimension($coluna)->setWidth($largura);
         }
 
-        $this->topo();
-        $linha = $this->identificacao($relatorio, 6);
-        $linha = $this->indicadores($relatorio, $linha + 1);
-        $linha = $this->publicacoes($relatorio, $linha + 1);
-        $linha = $this->alertas($relatorio, $linha + 1);
-        $linha = $this->fechamento($relatorio, $linha + 1);
+        $this->cabecalho($relatorio);
+        $linha = $this->publicacoes($relatorio, 4);
+        $linha = $this->alertas($relatorio, $linha);
+        $linha = $this->fechamento($relatorio, $linha);
         $this->impressao($linha);
 
         $this->aba->setSelectedCell('A1');
@@ -74,137 +62,64 @@ class PlanilhaRelatorio
 
     // ----------------------------------------------------------------- blocos
 
-    private function topo(): void
+    /** Linhas 1 a 3: empresa e contrato, descrição e período, títulos das colunas. */
+    private function cabecalho(RelatorioPrefeitura $relatorio): void
     {
-        foreach ([1, 2, 3] as $r) {
-            $this->faixa($r, self::NAVY, 22);
+        $empresa = sprintf('%s - CNPJ %s - CONTRATO %s - MUNICÍPIO: %s',
+            mb_strtoupper(RelatorioPrefeitura::EMPRESA), RelatorioPrefeitura::CNPJ,
+            $relatorio->cliente->contrato, $relatorio->cliente->nome);
+        $this->texto('A1', $empresa, 'A1:E1');
+        $this->estilo('A1:E1', fonte: 'Calibri', tamanho: 10, negrito: true);
+
+        $descricao = 'Relatório sintético referente a disponibilização de informações e oportunidades para a gestão '
+            . 'pública postadas no site: ' . RelatorioPrefeitura::SITE . ' - Período: ' . $relatorio->periodo();
+        $this->texto('A2', $descricao, 'A2:E2');
+        $this->estilo('A2:E2', fonte: 'Times New Roman', tamanho: 9);
+        $this->aba->getCell('A2')->getHyperlink()->setUrl('http://' . RelatorioPrefeitura::SITE . '/');
+
+        foreach (['A' => 'Nº', 'B' => 'DATA', 'C' => 'LINK', 'D' => 'CATEGORIAS', 'E' => 'CONTEÚDO'] as $coluna => $titulo) {
+            $this->texto("{$coluna}3", $titulo);
         }
+        $this->estilo('A3:E3', tamanho: 9, negrito: true, cor: 'FFFFFF');
+        $this->preencher('A3:E3', self::VERDE);
 
-        $logo = new Drawing();
-        $logo->setName('Algoritmos e Dados');
-        $logo->setPath(resource_path('relatorios/logo-branca.png'));
-        $logo->setHeight(36);
-        $logo->setCoordinates('A1');
-        $logo->setOffsetX(12);
-        $logo->setOffsetY(26);
-        $logo->setWorksheet($this->aba);
-
-        $this->texto('D1', mb_strtoupper(RelatorioPrefeitura::TITULO), 'D1:E2');
-        $this->estilo('D1', tamanho: 13, negrito: true, cor: 'FFFFFF', alinhamento: Alignment::HORIZONTAL_RIGHT);
-        $this->texto('D3', RelatorioPrefeitura::SUBTITULO, 'D3:E3');
-        $this->estilo('D3', tamanho: 8, cor: self::SUAVE, alinhamento: Alignment::HORIZONTAL_RIGHT);
-
-        $this->faixa(4, self::AZUL, 4);
-        $this->aba->getRowDimension(5)->setRowHeight(10);
-    }
-
-    private function identificacao(RelatorioPrefeitura $relatorio, int $r): int
-    {
-        $campos = [
-            ['A', 'B', 'Município', $relatorio->cliente->nome],
-            ['C', 'C', 'Contrato', (string) $relatorio->cliente->contrato],
-            ['D', 'D', 'Período', $relatorio->periodo()],
-            ['E', 'E', 'Emitido em', $relatorio->emitidoEm->format('d/m/Y H:i')],
-        ];
-
-        foreach ($campos as [$de, $ate, $rotulo, $valor]) {
-            $this->texto("{$de}{$r}", mb_strtoupper($rotulo), "{$de}{$r}:{$ate}{$r}");
-            $this->estilo("{$de}{$r}", tamanho: 7, negrito: true, cor: self::CINZA);
-            $this->texto($de . ($r + 1), $valor, $de . ($r + 1) . ':' . $ate . ($r + 1));
-            $this->estilo($de . ($r + 1), tamanho: 11, negrito: true, cor: self::NAVY);
-        }
-
-        $this->preencher("A{$r}:E" . ($r + 1), self::FUNDO);
-        $this->borda('A' . ($r + 1) . ':E' . ($r + 1), 'bottom', Border::BORDER_MEDIUM, self::NAVY);
-        $this->aba->getRowDimension($r)->setRowHeight(18);
-        $this->aba->getRowDimension($r + 1)->setRowHeight(26);
-
-        $r += 2;
-        $this->texto("A{$r}", RelatorioPrefeitura::EMPRESA . '  ·  CNPJ ' . RelatorioPrefeitura::CNPJ . '  ·  ' . RelatorioPrefeitura::SITE, "A{$r}:E{$r}");
-        $this->estilo("A{$r}", tamanho: 8, cor: self::CINZA);
-        $this->aba->getRowDimension($r)->setRowHeight(18);
-        $this->aba->getRowDimension($r + 1)->setRowHeight(10);
-
-        return $r + 1;
-    }
-
-    private function indicadores(RelatorioPrefeitura $relatorio, int $r): int
-    {
-        $kpis = [
-            ['A', 'B', 'Publicações no período', $relatorio->publicacoes()->count()],
-            ['C', 'C', 'Alertas entregues', $relatorio->alertas()->count()],
-            ['D', 'D', 'Categorias abordadas', $relatorio->totalCategorias()],
-        ];
-
-        foreach ($kpis as [$de, $ate, $rotulo, $valor]) {
-            $this->texto("{$de}{$r}", mb_strtoupper($rotulo), "{$de}{$r}:{$ate}{$r}");
-            $this->estilo("{$de}{$r}", tamanho: 7, negrito: true, cor: self::CINZA);
-            $this->aba->mergeCells($de . ($r + 1) . ':' . $ate . ($r + 1));
-            $this->aba->setCellValue($de . ($r + 1), $valor);
-            $this->estilo($de . ($r + 1), tamanho: 20, negrito: true, cor: self::NAVY);
-        }
-
-        $this->preencher("A{$r}:D" . ($r + 1), self::FUNDO);
-        $this->borda("A{$r}:D{$r}", 'top', Border::BORDER_THICK, self::AZUL);
-        $this->aba->getRowDimension($r)->setRowHeight(22);
-        $this->aba->getRowDimension($r + 1)->setRowHeight(34);
-        $this->aba->getRowDimension($r + 2)->setRowHeight(14);
-
-        return $r + 2;
+        $this->aba->getRowDimension(1)->setRowHeight(29.25);
+        $this->aba->getRowDimension(2)->setRowHeight(29.25);
+        $this->aba->getRowDimension(3)->setRowHeight(29.25);
     }
 
     private function publicacoes(RelatorioPrefeitura $relatorio, int $r): int
     {
-        $this->secao($r, 'Publicações do período', self::NAVY);
-        $this->cabecalho($r + 1, ['Nº', 'Data', 'Categoria', 'Conteúdo', 'Fonte'], self::NAVY);
-        $r += 2;
-
         if ($relatorio->publicacoes()->isEmpty()) {
             return $this->vazio($r, 'Nenhuma publicação no período.');
         }
 
-        foreach ($relatorio->publicacoes() as $i => $postagem) {
-            $this->linhaDeDados($r, 'D');
-            $this->aba->setCellValue("A{$r}", $i + 1);
-            $this->data("B{$r}", $postagem->data_publicacao);
-            $this->texto("C{$r}", $postagem->rotuloTipo());
-            $this->texto("D{$r}", mb_strtoupper($postagem->titulo));
-            $this->link("E{$r}", $postagem->link);
-            $this->aba->getRowDimension($r)->setRowHeight($this->altura([
-                [$postagem->rotuloTipo(), self::LARGURAS['C']],
-                [mb_strtoupper($postagem->titulo), self::LARGURAS['D'] * 0.8],
-            ]));
+        foreach ($relatorio->publicacoes()->values() as $i => $postagem) {
+            $titulo = mb_strtoupper($postagem->titulo);
+            $this->linha($r, $i + 1, $postagem->data_publicacao, $postagem->link, $postagem->rotuloTipo(), $titulo);
             $r++;
         }
 
         return $r;
     }
 
+    /** Faixa verde "ALERTAS POR WHATSAPP" e os alertas; a numeração continua. */
     private function alertas(RelatorioPrefeitura $relatorio, int $r): int
     {
-        $this->secao($r, 'Alertas enviados por WhatsApp', self::TEAL);
-        $this->cabecalho($r + 1, ['Nº', 'Data do envio', 'Conteúdo', '', 'Fonte'], self::TEAL);
-        $this->aba->mergeCells('C' . ($r + 1) . ':D' . ($r + 1));
-        $r += 2;
+        $this->texto("A{$r}", 'ALERTAS POR WHATSAPP', "A{$r}:E{$r}");
+        $this->estilo("A{$r}:E{$r}", fonte: 'Times New Roman', tamanho: 14, negrito: true, cor: 'FFFFFF');
+        $this->preencher("A{$r}:E{$r}", self::VERDE);
+        $this->aba->getRowDimension($r)->setRowHeight(39.3);
+        $r++;
 
         if ($relatorio->alertas()->isEmpty()) {
             return $this->vazio($r, 'Nenhum alerta entregue no período.');
         }
 
-        // A numeração continua a das publicações.
         $numero = $relatorio->publicacoes()->count();
-
         foreach ($relatorio->alertas() as $alerta) {
-            $conteudo = $relatorio->conteudoDoAlerta($alerta);
-
-            $this->linhaDeDados($r, 'C');
-            $this->aba->setCellValue("A{$r}", ++$numero);
-            $this->data("B{$r}", $relatorio->dataDoAlerta($alerta));
-            $this->texto("C{$r}", $conteudo, "C{$r}:D{$r}");
-            $this->link("E{$r}", $relatorio->linkDoAlerta($alerta));
-            $this->aba->getRowDimension($r)->setRowHeight($this->altura([
-                [$conteudo, (self::LARGURAS['C'] + self::LARGURAS['D']) * 0.85],
-            ]));
+            $this->linha($r, ++$numero, $relatorio->dataDoAlerta($alerta), $relatorio->linkDoAlerta($alerta),
+                null, $relatorio->conteudoDoAlerta($alerta));
             $r++;
         }
 
@@ -213,21 +128,9 @@ class PlanilhaRelatorio
 
     private function fechamento(RelatorioPrefeitura $relatorio, int $r): int
     {
-        $this->aba->getRowDimension($r)->setRowHeight(26);
-        $r++;
-
-        $this->texto("D{$r}", RelatorioPrefeitura::LOCAL . ', ' . $relatorio->dataPorExtenso(), "D{$r}:E{$r}");
-        $this->estilo("D{$r}", tamanho: 9, alinhamento: Alignment::HORIZONTAL_RIGHT);
-        $this->aba->getRowDimension($r + 1)->setRowHeight(34);
-
-        $r += 2;
-        $this->texto("D{$r}", RelatorioPrefeitura::EMPRESA, "D{$r}:E{$r}");
-        $this->estilo("D{$r}", tamanho: 9, negrito: true, cor: self::NAVY, alinhamento: Alignment::HORIZONTAL_RIGHT);
-        $this->borda("D{$r}:E{$r}", 'top', Border::BORDER_THIN, self::NAVY);
-
-        $r++;
-        $this->texto("D{$r}", 'CNPJ ' . RelatorioPrefeitura::CNPJ, "D{$r}:E{$r}");
-        $this->estilo("D{$r}", tamanho: 8, cor: self::CINZA, alinhamento: Alignment::HORIZONTAL_RIGHT);
+        $this->texto("D{$r}", RelatorioPrefeitura::LOCAL . ', ' . $relatorio->dataPorExtenso());
+        $this->estilo("A{$r}:E{$r}", fonte: 'Times New Roman', tamanho: 9, negrito: true);
+        $this->aba->getRowDimension($r)->setRowHeight(97.8);
 
         return $r;
     }
@@ -236,84 +139,58 @@ class PlanilhaRelatorio
     {
         $pagina = $this->aba->getPageSetup();
         $pagina->setPaperSize(PageSetup::PAPERSIZE_A4);
-        $pagina->setOrientation(PageSetup::ORIENTATION_PORTRAIT);
+        $pagina->setOrientation(PageSetup::ORIENTATION_LANDSCAPE);
         $pagina->setFitToWidth(1);
         $pagina->setFitToHeight(0);
         $pagina->setPrintArea("A1:E{$ultimaLinha}");
+        $pagina->setRowsToRepeatAtTopByStartAndEnd(3, 3);
 
-        $margens = $this->aba->getPageMargins();
-        $margens->setLeft(0.4)->setRight(0.4)->setTop(0.4)->setBottom(0.6);
-
-        $this->aba->getHeaderFooter()->setOddFooter(
-            '&L&"Arial"&7' . RelatorioPrefeitura::EMPRESA . ' · ' . RelatorioPrefeitura::SITE
-            . '&R&"Arial"&7Página &P de &N'
-        );
+        $this->aba->getPageMargins()->setLeft(0.71)->setRight(0.71)->setTop(0.75)->setBottom(0.75);
     }
 
-    // -------------------------------------------------------------- tabelas
+    // ------------------------------------------------------------- linhas
 
-    private function secao(int $r, string $titulo, string $cor): void
+    /** Uma linha da tabela: Nº, data, link, categoria e conteúdo. */
+    private function linha(int $r, int $numero, \DateTimeInterface $data, ?string $link, ?string $categoria, string $conteudo): void
     {
-        $this->texto("A{$r}", mb_strtoupper($titulo), "A{$r}:E{$r}");
-        $this->estilo("A{$r}", tamanho: 11, negrito: true, cor: $cor, vertical: Alignment::VERTICAL_BOTTOM);
-        $this->borda("A{$r}:E{$r}", 'bottom', Border::BORDER_MEDIUM, $cor);
-        $this->aba->getRowDimension($r)->setRowHeight(24);
-    }
+        $this->estilo("A{$r}:E{$r}");
+        $this->aba->getStyle("A{$r}")->getFont()->setName('Times New Roman')->setSize(10);
+        $this->aba->getStyle("E{$r}")->getFont()->setBold(true);
 
-    private function cabecalho(int $r, array $nomes, string $cor): void
-    {
-        foreach ($nomes as $i => $nome) {
-            $celula = chr(65 + $i) . $r;
-            $this->texto($celula, $nome);
-            $this->estilo($celula, tamanho: 8, negrito: true, cor: 'FFFFFF',
-                alinhamento: $i < 2 ? Alignment::HORIZONTAL_CENTER : Alignment::HORIZONTAL_LEFT);
+        $this->aba->setCellValue("A{$r}", $numero);
+
+        $dia = \DateTimeImmutable::createFromFormat('!Y-m-d', $data->format('Y-m-d'));
+        $this->aba->setCellValue("B{$r}", Date::dateTimeToExcel($dia));
+        $this->aba->getStyle("B{$r}")->getNumberFormat()->setFormatCode('dd/mm/yyyy;@');
+
+        if ($link) {
+            $this->texto("C{$r}", $link);
+            $this->aba->getCell("C{$r}")->getHyperlink()->setUrl($link);
+            $this->aba->getStyle("C{$r}")->getFont()->setUnderline(true)->getColor()->setRGB(self::AZUL_LINK);
         }
-        $this->preencher("A{$r}:E{$r}", $cor);
-        $this->aba->getRowDimension($r)->setRowHeight(22);
-    }
 
-    /**
-     * Zebra, filete e alinhamento de uma linha; a coluna de conteúdo vai em
-     * negrito. Vem antes dos valores: o link tem estilo próprio por cima.
-     */
-    private function linhaDeDados(int $r, string $colunaConteudo): void
-    {
-        $this->preencher("A{$r}:E{$r}", self::ZEBRA);
-        $this->borda("A{$r}:E{$r}", 'bottom', Border::BORDER_THIN, self::LINHA);
-        $this->estilo("A{$r}:B{$r}", alinhamento: Alignment::HORIZONTAL_CENTER);
-        $this->estilo("C{$r}:E{$r}");
-        $this->aba->getStyle("{$colunaConteudo}{$r}")->getFont()->setBold(true);
+        if ($categoria) {
+            $this->texto("D{$r}", $categoria);
+        }
+
+        $this->texto("E{$r}", $conteudo);
+
+        // Altura fixa do modelo; cresce só quando o link ou o conteúdo não cabem em três linhas.
+        $linhas = max(ceil(mb_strlen((string) $link) / 70), ceil(mb_strlen($conteudo) / 85), 1);
+        $this->aba->getRowDimension($r)->setRowHeight(max(self::ALTURA_LINHA, $linhas * 11 + 6));
     }
 
     private function vazio(int $r, string $mensagem): int
     {
         $this->texto("A{$r}", $mensagem, "A{$r}:E{$r}");
-        $this->estilo("A{$r}", cor: self::CINZA);
+        $this->estilo("A{$r}:E{$r}");
         $this->aba->getStyle("A{$r}")->getFont()->setItalic(true);
-        $this->preencher("A{$r}:E{$r}", self::ZEBRA);
-        $this->borda("A{$r}:E{$r}", 'bottom', Border::BORDER_THIN, self::LINHA);
-        $this->aba->getRowDimension($r)->setRowHeight(28);
+        $this->aba->getRowDimension($r)->setRowHeight(self::ALTURA_LINHA);
 
         return $r + 1;
     }
 
-    /**
-     * Altura da linha pelo texto mais longo. O Excel não ajusta sozinho
-     * linha com célula mesclada, então a conta é feita aqui.
-     *
-     * @param  array<int, array{0: string, 1: float}>  $textos  [texto, caracteres por linha]
-     */
-    private function altura(array $textos): float
-    {
-        $linhas = 1;
-        foreach ($textos as [$texto, $porLinha]) {
-            $linhas = max($linhas, (int) ceil(mb_strlen($texto) / max(1, $porLinha)));
-        }
-
-        return max(30, $linhas * 12 + 10);
-    }
-
-    // ---------------------------------------------------------------- células
+    // ------------------------------------------------------------- células
 
     private function texto(string $celula, string $valor, ?string $mesclar = null): void
     {
@@ -323,56 +200,23 @@ class PlanilhaRelatorio
         }
     }
 
-    private function data(string $celula, \DateTimeInterface $data): void
-    {
-        $dia = \DateTimeImmutable::createFromFormat('!Y-m-d', $data->format('Y-m-d'));
-        $this->aba->setCellValue($celula, Date::dateTimeToExcel($dia));
-        $this->aba->getStyle($celula)->getNumberFormat()->setFormatCode('dd/mm/yyyy');
-    }
-
-    private function link(string $celula, ?string $url): void
-    {
-        if (! $url) {
-            return;
-        }
-
-        // Endereço sem espaço não quebra linha: o texto curto cabe na coluna.
-        $this->texto($celula, RelatorioPrefeitura::linkCurto($url, 45));
-        $this->aba->getCell($celula)->getHyperlink()->setUrl($url)->setTooltip($url);
-        $this->aba->getStyle($celula)->getFont()->setUnderline(true)->setSize(8)->getColor()->setRGB(self::AZUL);
-    }
-
+    /** Centralizado, com quebra de linha e borda fina em volta de cada célula, como no modelo. */
     private function estilo(
         string $intervalo,
-        float $tamanho = 9,
+        string $fonte = 'Arial',
+        float $tamanho = 8,
         bool $negrito = false,
-        string $cor = self::TINTA,
-        string $alinhamento = Alignment::HORIZONTAL_LEFT,
-        string $vertical = Alignment::VERTICAL_CENTER,
+        string $cor = '000000',
     ): void {
         $estilo = $this->aba->getStyle($intervalo);
-        $estilo->getFont()->setName(self::FONTE)->setSize($tamanho)->setBold($negrito)->getColor()->setRGB($cor);
-        $estilo->getAlignment()->setHorizontal($alinhamento)->setVertical($vertical)->setWrapText(true)
-            ->setIndent($alinhamento === Alignment::HORIZONTAL_CENTER ? 0 : 1);
+        $estilo->getFont()->setName($fonte)->setSize($tamanho)->setBold($negrito)->getColor()->setRGB($cor);
+        $estilo->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER)
+            ->setVertical(Alignment::VERTICAL_CENTER)->setWrapText(true);
+        $estilo->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN)->getColor()->setRGB('000000');
     }
 
     private function preencher(string $intervalo, string $cor): void
     {
         $this->aba->getStyle($intervalo)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB($cor);
-    }
-
-    private function borda(string $intervalo, string $lado, string $tipo, string $cor): void
-    {
-        $borda = match ($lado) {
-            'top' => $this->aba->getStyle($intervalo)->getBorders()->getTop(),
-            default => $this->aba->getStyle($intervalo)->getBorders()->getBottom(),
-        };
-        $borda->setBorderStyle($tipo)->getColor()->setRGB($cor);
-    }
-
-    private function faixa(int $r, string $cor, float $altura): void
-    {
-        $this->preencher("A{$r}:E{$r}", $cor);
-        $this->aba->getRowDimension($r)->setRowHeight($altura);
     }
 }
