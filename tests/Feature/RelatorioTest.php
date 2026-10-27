@@ -126,10 +126,14 @@ class RelatorioTest extends TestCase
         $aba = IOFactory::load($this->arquivo($resposta))->getSheet(0);
         $celulas = $this->textos($aba);
 
-        // Identificação
-        $this->assertContains('Itaúna/MG', $celulas);
-        $this->assertContains('225/2025', $celulas);
-        $this->assertContains('01/03/2030 a 31/03/2030', $celulas);
+        // Cabeçalho no modelo do cliente: contrato e município na 1ª linha, período na 2ª.
+        $this->assertSame(
+            'CD ALGORITMOS E DADOS LTDA - CNPJ 58.502.042/0001-00 - CONTRATO 225/2025 - MUNICÍPIO: Itaúna/MG',
+            $aba->getCell('A1')->getValue()
+        );
+        $this->assertStringEndsWith('Período: 01/03/2030 a 31/03/2030', $aba->getCell('A2')->getValue());
+        $this->assertSame(['Nº', 'DATA', 'LINK', 'CATEGORIAS', 'CONTEÚDO'], $aba->rangeToArray('A3:E3')[0]);
+        $this->assertNotNull($this->linhaCom($aba, 'ALERTAS POR WHATSAPP'));
 
         // Publicações: só as publicadas do período, em ordem de data, em maiúsculas.
         $titulos = array_values(array_filter($celulas, fn ($t) => str_starts_with($t, 'EDITAL ')));
@@ -141,7 +145,7 @@ class RelatorioTest extends TestCase
         $linha = $this->linhaCom($aba, 'Comunicado importante referente a Edital do primeiro dia');
         $this->assertSame(4, $aba->getCell("A{$linha}")->getValue());
         $this->assertSame('01/03/2030', $aba->getCell("B{$linha}")->getFormattedValue());
-        $this->assertSame('https://www.gov.br/edital-1', $aba->getCell("E{$linha}")->getHyperlink()->getUrl());
+        $this->assertSame('https://www.gov.br/edital-1', $aba->getCell("C{$linha}")->getHyperlink()->getUrl());
 
         // O alerta das 23h30 do dia 31 (já dia 1º em UTC) entra em março.
         $this->assertNotNull($this->linhaCom($aba, 'Comunicado importante referente a Edital do último dia'));
@@ -159,7 +163,7 @@ class RelatorioTest extends TestCase
         ))->getSheet(0);
 
         $linha = $this->linhaCom($aba, '=HYPERLINK("HTTP://EXEMPLO.COM","CLIQUE")');
-        $this->assertSame(DataType::TYPE_STRING, $aba->getCell("D{$linha}")->getDataType());
+        $this->assertSame(DataType::TYPE_STRING, $aba->getCell("E{$linha}")->getDataType());
     }
 
     public function test_gera_o_pdf(): void
