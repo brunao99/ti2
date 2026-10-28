@@ -25,7 +25,8 @@ class GerarRelatorioRequest extends FormRequest
             'cliente' => ['required', 'integer', Rule::exists('users', 'id')->where('perfil', User::CLIENT)],
             'inicio' => ['required', 'date_format:Y-m-d'],
             'fim' => ['required', 'date_format:Y-m-d', 'after_or_equal:inicio'],
-            'formato' => ['required', Rule::in(['xlsx', 'pdf'])],
+            'formatos' => ['required', 'array', 'min:1'],
+            'formatos.*' => ['required', 'distinct', Rule::in(['xlsx', 'pdf'])],
         ];
     }
 
@@ -40,8 +41,11 @@ class GerarRelatorioRequest extends FormRequest
             'fim.required' => 'Informe a data final do período.',
             'fim.date_format' => 'A data final é inválida.',
             'fim.after_or_equal' => 'A data final não pode ser anterior à inicial.',
-            'formato.required' => 'Escolha o formato do relatório.',
-            'formato.in' => 'Escolha planilha (XLSX) ou PDF.',
+            'formatos.required' => 'Escolha pelo menos um formato: planilha (XLSX) ou PDF.',
+            'formatos.array' => 'Escolha pelo menos um formato: planilha (XLSX) ou PDF.',
+            'formatos.min' => 'Escolha pelo menos um formato: planilha (XLSX) ou PDF.',
+            'formatos.*.in' => 'Escolha planilha (XLSX), PDF ou os dois.',
+            'formatos.*.distinct' => 'Cada formato só pode ser escolhido uma vez.',
         ];
     }
 
@@ -64,6 +68,12 @@ class GerarRelatorioRequest extends FormRequest
     public function cliente(): User
     {
         return $this->cliente ??= User::findOrFail($this->integer('cliente'));
+    }
+
+    /** @return array<int, string> 'xlsx', 'pdf' ou os dois, nessa ordem. */
+    public function formatos(): array
+    {
+        return array_values(array_intersect(['xlsx', 'pdf'], $this->validated('formatos')));
     }
 
     public function inicio(): CarbonImmutable

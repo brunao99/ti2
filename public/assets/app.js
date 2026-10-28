@@ -184,12 +184,11 @@
   }
 
   function camposRelatorio(form) {
-    var formato = form.querySelector("[name=formato]:checked");
     return {
       cliente: form.querySelector("[name=cliente]").value,
       inicio: form.querySelector("[name=inicio]").value,
       fim: form.querySelector("[name=fim]").value,
-      formato: formato ? formato.value : "xlsx"
+      formatos: Array.prototype.map.call(form.querySelectorAll("[name='formatos[]']:checked"), function (i) { return i.value; })
     };
   }
 
@@ -199,7 +198,7 @@
   function atualizarRelatorio(form) {
     if (!form) return;
     var c = camposRelatorio(form);
-    form.querySelector("[data-gerar]").disabled = !(c.cliente && c.inicio && c.fim && c.inicio <= c.fim);
+    form.querySelector("[data-gerar]").disabled = !(c.cliente && c.inicio && c.fim && c.inicio <= c.fim && c.formatos.length);
     clearTimeout(esperaPrevia);
     esperaPrevia = setTimeout(function () { buscarPrevia(form); }, 250);
   }
@@ -207,7 +206,9 @@
   function buscarPrevia(form) {
     var c = camposRelatorio(form);
     var pedido = form.pedidoPrevia = (form.pedidoPrevia || 0) + 1;
-    fetch(form.getAttribute("data-previa") + "?" + new URLSearchParams(c).toString(), {
+    var params = new URLSearchParams({ cliente: c.cliente, inicio: c.inicio, fim: c.fim });
+    c.formatos.forEach(function (f) { params.append("formatos[]", f); });
+    fetch(form.getAttribute("data-previa") + "?" + params.toString(), {
       headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
     })
       .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
@@ -215,9 +216,10 @@
         if (pedido !== form.pedidoPrevia) return; // chegou depois de uma resposta mais nova
         form.querySelector("[data-previa-publicacoes]").textContent = d.publicacoes === null ? "—" : d.publicacoes;
         form.querySelector("[data-previa-alertas]").textContent = d.alertas === null ? "—" : d.alertas;
-        form.querySelector("[data-previa-arquivo]").textContent = d.arquivo
-          || (d.publicacoes === null ? "Confira o período: a data final vem antes da inicial."
-                                     : "Selecione o cliente para ver o nome do arquivo.");
+        form.querySelector("[data-previa-arquivo]").textContent = d.arquivos.length ? d.arquivos.join("\n")
+          : d.publicacoes === null ? "Confira o período: a data final vem antes da inicial."
+          : !c.formatos.length ? "Marque pelo menos um formato."
+          : "Selecione o cliente para ver o nome do arquivo.";
       })
       .catch(function () {});
   }
@@ -268,8 +270,33 @@
     atualizarRelatorio(rel);
   });
 
-  // O arquivo é baixado sem sair da tela: erro de validação aparece dentro
-  // da janela. Sem fetch, o formulário segue o envio normal.
+  // Gera um formato: devolve o arquivo ou os erros de validação.
+  function gerarArquivo(form, formato) {
+    var dados = new FormData(form);
+    dados.delete("formatos[]");
+    dados.append("formatos[]", formato);
+    return fetch(form.action, {
+      method: "POST",
+      body: dados,
+      headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
+    }).then(function (r) {
+      if (r.status === 422) {
+        return r.json().then(function (d) {
+          var erros = [];
+          Object.keys(d.errors || {}).forEach(function (k) { erros = erros.concat(d.errors[k]); });
+          throw { erros: erros.length ? erros : [d.message] };
+        });
+      }
+      if (r.status === 419) throw { erros: ["A sessão expirou. Recarregue a página e tente de novo."] };
+      if (!r.ok) throw { erros: ["Não foi possível gerar o relatório. Tente de novo em instantes."] };
+      return r.blob().then(function (blob) { return { blob: blob, nome: nomeDoArquivo(r) }; });
+    });
+  }
+
+  // Cada formato marcado vira um arquivo baixado separado, sem sair da tela.
+  // Os dois são gerados antes de qualquer download: se um falhar, nenhum sai
+  // pela metade. Erro de validação aparece dentro da janela. Sem fetch, o
+  // formulário segue o envio normal.
   document.addEventListener("submit", function (e) {
     var form = e.target.closest("[data-relatorio]");
     if (!form || !window.fetch || !window.URL || !URL.createObjectURL) return;
@@ -277,32 +304,21 @@
 
     var botao = form.querySelector("[data-gerar]");
     if (botao.disabled) return;
+    var formatos = camposRelatorio(form).formatos;
     var rotulo = botao.textContent;
     botao.disabled = true;
-    botao.textContent = "Gerando…";
+    botao.textContent = formatos.length > 1 ? "Gerando os 2 arquivos…" : "Gerando…";
     mostrarErros(form, []);
 
-    fetch(form.action, {
-      method: "POST",
-      body: new FormData(form),
-      headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
-    })
-      .then(function (r) {
-        if (r.status === 422) {
-          return r.json().then(function (d) {
-            var erros = [];
-            Object.keys(d.errors || {}).forEach(function (k) { erros = erros.concat(d.errors[k]); });
-            throw { erros: erros.length ? erros : [d.message] };
-          });
-        }
-        if (r.status === 419) throw { erros: ["A sessão expirou. Recarregue a página e tente de novo."] };
-        if (!r.ok) throw { erros: ["Não foi possível gerar o relatório. Tente de novo em instantes."] };
-        return r.blob().then(function (blob) { return { blob: blob, nome: nomeDoArquivo(r) }; });
-      })
-      .then(function (arquivo) {
-        baixar(arquivo.blob, arquivo.nome);
+    Promise.all(formatos.map(function (f) { return gerarArquivo(form, f); }))
+      .then(function (arquivos) {
+        // Um pequeno intervalo entre os downloads: alguns navegadores
+        // ignoram o segundo quando os dois saem no mesmo instante.
+        arquivos.forEach(function (a, i) {
+          setTimeout(function () { baixar(a.blob, a.nome); }, i * 600);
+        });
         var modal = form.closest(".modal");
-        if (modal) fecharModal(modal);
+        if (modal) setTimeout(function () { fecharModal(modal); }, (arquivos.length - 1) * 600 + 100);
       })
       .catch(function (falha) {
         mostrarErros(form, falha && falha.erros

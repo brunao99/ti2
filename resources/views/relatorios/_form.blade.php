@@ -74,16 +74,18 @@
       </div>
     </fieldset>
 
+    {{-- Dá para marcar os dois: cada formato sai num arquivo separado. --}}
+    @php($formatos = (array) old('formatos', ['xlsx']))
     <fieldset class="rel-campo">
-      <legend class="label">Formato</legend>
+      <legend class="label">Formato <span class="rel-dica">marque um ou os dois</span></legend>
       <div class="rel-formatos">
         <label class="rel-formato">
-          <input type="radio" name="formato" value="xlsx" @checked(old('formato', 'xlsx') === 'xlsx')>
+          <input type="checkbox" name="formatos[]" value="xlsx" @checked(in_array('xlsx', $formatos, true))>
           <span class="rel-icone rel-icone-xlsx" aria-hidden="true">XLSX</span>
           <span class="rel-formato-texto"><b>Planilha</b><small>Para conferir e editar</small></span>
         </label>
         <label class="rel-formato">
-          <input type="radio" name="formato" value="pdf" @checked(old('formato') === 'pdf')>
+          <input type="checkbox" name="formatos[]" value="pdf" @checked(in_array('pdf', $formatos, true))>
           <span class="rel-icone rel-icone-pdf" aria-hidden="true">PDF</span>
           <span class="rel-formato-texto"><b>PDF</b><small>Para enviar à prefeitura</small></span>
         </label>

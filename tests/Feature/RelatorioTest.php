@@ -91,24 +91,24 @@ class RelatorioTest extends TestCase
 
         $this->actingAs($this->adm)
             ->getJson(route('relatorios.previa', [
-                'cliente' => $this->cliente->id, 'inicio' => '2030-03-01', 'fim' => '2030-03-31', 'formato' => 'pdf',
+                'cliente' => $this->cliente->id, 'inicio' => '2030-03-01', 'fim' => '2030-03-31', 'formatos' => ['xlsx', 'pdf'],
             ]))
             ->assertOk()
             ->assertExactJson([
                 'publicacoes' => 3,
                 'alertas' => 3,
-                'arquivo' => 'Relatório Itaúna-MG 01-03-2030 a 31-03-2030.pdf',
+                'arquivos' => ['Relatório Itaúna-MG 01-03-2030 a 31-03-2030.xlsx', 'Relatório Itaúna-MG 01-03-2030 a 31-03-2030.pdf'],
             ]);
 
         // Sem cliente: as publicações já aparecem; alertas e arquivo, não.
         $this->actingAs($this->adm)
             ->getJson(route('relatorios.previa', ['inicio' => '2030-03-01', 'fim' => '2030-03-31']))
-            ->assertExactJson(['publicacoes' => 3, 'alertas' => null, 'arquivo' => null]);
+            ->assertExactJson(['publicacoes' => 3, 'alertas' => null, 'arquivos' => []]);
 
         // Período invertido não conta nada.
         $this->actingAs($this->adm)
             ->getJson(route('relatorios.previa', ['cliente' => $this->cliente->id, 'inicio' => '2030-03-31', 'fim' => '2030-03-01']))
-            ->assertExactJson(['publicacoes' => null, 'alertas' => null, 'arquivo' => null]);
+            ->assertExactJson(['publicacoes' => null, 'alertas' => null, 'arquivos' => []]);
     }
 
     public function test_gera_a_planilha_com_cabecalho_publicacoes_e_alertas(): void
@@ -170,7 +170,7 @@ class RelatorioTest extends TestCase
     {
         $this->cenario();
 
-        $resposta = $this->actingAs($this->adm)->post(route('relatorios.gerar'), $this->pedido(['formato' => 'pdf']));
+        $resposta = $this->actingAs($this->adm)->post(route('relatorios.gerar'), $this->pedido(['formatos' => ['pdf']]));
 
         $resposta->assertOk()->assertHeader('Content-Type', 'application/pdf');
         $this->assertStringContainsString(
@@ -178,6 +178,36 @@ class RelatorioTest extends TestCase
             $resposta->headers->get('Content-Disposition')
         );
         $this->assertStringStartsWith('%PDF-', file_get_contents($this->arquivo($resposta)));
+    }
+
+    public function test_janela_permite_marcar_os_dois_formatos(): void
+    {
+        $this->actingAs($this->adm)
+            ->get(route('relatorios.index'), ['X-Requested-With' => 'XMLHttpRequest'])
+            ->assertSee('<input type="checkbox" name="formatos[]" value="xlsx" checked', false)
+            ->assertSee('<input type="checkbox" name="formatos[]" value="pdf"', false);
+    }
+
+    public function test_sem_formato_nao_gera(): void
+    {
+        $this->actingAs($this->adm)
+            ->postJson(route('relatorios.gerar'), $this->pedido(['formatos' => []]))
+            ->assertJsonValidationErrors(['formatos' => 'pelo menos um formato']);
+    }
+
+    public function test_os_dois_formatos_num_pedido_so_viram_zip(): void
+    {
+        // Caminho sem JavaScript: a página normal manda um pedido por formato.
+        $this->cenario();
+
+        $resposta = $this->actingAs($this->adm)->post(route('relatorios.gerar'), $this->pedido(['formatos' => ['xlsx', 'pdf']]));
+
+        $resposta->assertOk()->assertHeader('Content-Type', 'application/zip');
+        $zip = new \ZipArchive();
+        $this->assertTrue($zip->open($this->arquivo($resposta)));
+        $this->assertStringStartsWith('PK', $zip->getFromName('Relatório Itaúna-MG 01-03-2030 a 31-03-2030.xlsx'));
+        $this->assertStringStartsWith('%PDF-', $zip->getFromName('Relatório Itaúna-MG 01-03-2030 a 31-03-2030.pdf'));
+        $zip->close();
     }
 
     public function test_periodo_sem_nada_ainda_gera_o_relatorio(): void
@@ -207,9 +237,9 @@ class RelatorioTest extends TestCase
     {
         $this->actingAs($this->adm)
             ->from(route('postagens.index'))
-            ->post(route('relatorios.gerar'), $this->pedido(['inicio' => '2030-03-31', 'fim' => '2030-03-01', 'formato' => 'docx']))
+            ->post(route('relatorios.gerar'), $this->pedido(['inicio' => '2030-03-31', 'fim' => '2030-03-01', 'formatos' => ['docx']]))
             ->assertRedirect(route('relatorios.index'))
-            ->assertSessionHasErrors(['fim', 'formato']);
+            ->assertSessionHasErrors(['fim', 'formatos.0']);
 
         // A página mostra o erro e mantém o que foi digitado.
         $this->actingAs($this->adm)
@@ -303,7 +333,7 @@ class RelatorioTest extends TestCase
             'cliente' => $this->cliente->id,
             'inicio' => '2030-03-01',
             'fim' => '2030-03-31',
-            'formato' => 'xlsx',
+            'formatos' => ['xlsx'],
         ];
     }
 

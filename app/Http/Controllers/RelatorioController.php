@@ -11,7 +11,9 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use ZipArchive;
 
 /**
  * Relatório da prefeitura: publicações do período e alertas entregues ao
@@ -39,34 +41,71 @@ class RelatorioController extends Controller
         $fim = $this->data($request->query('fim'));
 
         if (! $inicio || ! $fim || $fim->lt($inicio)) {
-            return response()->json(['publicacoes' => null, 'alertas' => null, 'arquivo' => null]);
+            return response()->json(['publicacoes' => null, 'alertas' => null, 'arquivos' => []]);
         }
 
         $cliente = User::where('perfil', User::CLIENT)->find($request->integer('cliente'));
-        $formato = $request->query('formato') === 'pdf' ? 'pdf' : 'xlsx';
+        $formatos = array_values(array_intersect(['xlsx', 'pdf'], (array) $request->query('formatos', [])));
 
         return response()->json([
             'publicacoes' => RelatorioPrefeitura::consultaPublicacoes($inicio, $fim)->count(),
             'alertas' => $cliente ? RelatorioPrefeitura::consultaAlertas($cliente, $inicio, $fim)->count() : null,
-            'arquivo' => $cliente ? RelatorioPrefeitura::montarNomeArquivo($cliente, $inicio, $fim, $formato) : null,
+            'arquivos' => $cliente
+                ? array_map(fn ($f) => RelatorioPrefeitura::montarNomeArquivo($cliente, $inicio, $fim, $f), $formatos)
+                : [],
         ]);
     }
 
     /**
      * O arquivo é gerado inteiro antes da resposta: se algo falhar, sai uma
      * página de erro, e não um download pela metade.
+     *
+     * Com os dois formatos marcados, a página faz um pedido por formato e
+     * baixa cada arquivo separado. Só quem envia os dois num pedido só (sem
+     * JavaScript) recebe um .zip, porque uma resposta carrega um arquivo.
      */
     public function gerar(GerarRelatorioRequest $request, PlanilhaRelatorio $planilha, PdfRelatorio $pdf): BinaryFileResponse
     {
         $relatorio = new RelatorioPrefeitura($request->cliente(), $request->inicio(), $request->fim());
-        $formato = $request->validated('formato');
-        $gerador = $formato === 'pdf' ? $pdf : $planilha;
+        $geradores = ['xlsx' => $planilha, 'pdf' => $pdf];
+        $formatos = $request->formatos();
 
+        if (count($formatos) > 1) {
+            return $this->baixarJuntos($relatorio, $geradores);
+        }
+
+        $formato = $formatos[0];
         $arquivo = tempnam(sys_get_temp_dir(), 'relatorio');
-        $gerador->salvar($relatorio, $arquivo);
+        $geradores[$formato]->salvar($relatorio, $arquivo);
 
         return response()
-            ->download($arquivo, $relatorio->nomeArquivo($formato), ['Content-Type' => $gerador::MIME])
+            ->download($arquivo, $relatorio->nomeArquivo($formato), ['Content-Type' => $geradores[$formato]::MIME])
+            ->deleteFileAfterSend();
+    }
+
+    /** @param array<string, PlanilhaRelatorio|PdfRelatorio> $geradores */
+    private function baixarJuntos(RelatorioPrefeitura $relatorio, array $geradores): BinaryFileResponse
+    {
+        $zip = tempnam(sys_get_temp_dir(), 'relatorio');
+        $temporarios = [];
+
+        try {
+            $pacote = new ZipArchive();
+            if ($pacote->open($zip, ZipArchive::OVERWRITE) !== true) {
+                throw new RuntimeException('Não foi possível montar o .zip do relatório.');
+            }
+            foreach ($geradores as $formato => $gerador) {
+                $temporarios[] = $arquivo = tempnam(sys_get_temp_dir(), 'relatorio');
+                $gerador->salvar($relatorio, $arquivo);
+                $pacote->addFile($arquivo, $relatorio->nomeArquivo($formato));
+            }
+            $pacote->close();
+        } finally {
+            array_map('unlink', $temporarios);
+        }
+
+        return response()
+            ->download($zip, $relatorio->nomeArquivo('zip'), ['Content-Type' => 'application/zip'])
             ->deleteFileAfterSend();
     }
 
