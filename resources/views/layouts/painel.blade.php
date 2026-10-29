@@ -5,6 +5,7 @@
 {{-- viewport-fit=cover libera as áreas seguras do iPhone (env(safe-area-inset-*)) para a barra inferior. --}}
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>@yield('titulo') — Painel Administrativo</title>
+@include('layouts.favicon')
 <link rel="stylesheet" href="{{ \App\Support\Asset::url('assets/style.css') }}">
 </head>
 <body>
