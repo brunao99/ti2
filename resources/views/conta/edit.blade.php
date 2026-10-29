@@ -13,7 +13,34 @@
 
     {{-- ---------------------------------------------------------- perfil --}}
     <aside class="conta-card conta-perfil">
-      <span class="avatar avatar-g">{{ $eu->iniciais() }}</span>
+      {{-- Foto de perfil: escolher mostra a prévia; só grava ao clicar em Salvar. --}}
+      <form method="POST" action="{{ route('conta.foto.salvar') }}" enctype="multipart/form-data"
+            class="foto-form" data-foto>
+        @csrf
+        <span class="avatar avatar-g" data-foto-previa>@include('layouts.avatar', ['usuario' => $eu])</span>
+
+        <label class="btn btn-ghost btn-sm foto-escolher">
+          <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" data-foto-arquivo>
+          {{ $eu->temFoto() ? 'Trocar foto' : 'Adicionar foto' }}
+        </label>
+        <p class="foto-ajuda">JPG, PNG ou WebP, até 2 MB. Fotos maiores são reduzidas ao enviar.</p>
+        <p class="foto-erro" data-foto-erro role="alert" hidden></p>
+
+        <div class="foto-acoes" data-foto-acoes hidden>
+          <button class="btn btn-sm" type="submit">Salvar foto</button>
+          <button class="btn btn-ghost btn-sm" type="button" data-foto-cancelar>Cancelar</button>
+        </div>
+        <noscript><button class="btn btn-sm" type="submit">Salvar foto</button></noscript>
+      </form>
+
+      @if ($eu->temFoto())
+        <form method="POST" action="{{ route('conta.foto.remover') }}" class="foto-remover" data-foto-remover>
+          @csrf
+          @method('DELETE')
+          <button type="submit">Remover foto</button>
+        </form>
+      @endif
+
       <h1 class="perfil-nome">{{ $eu->nome }}</h1>
       <p class="perfil-login mono">{{ '@' . $eu->usuario }}</p>
 

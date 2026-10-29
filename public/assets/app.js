@@ -332,6 +332,111 @@
       });
   });
 
+  // ---- foto de perfil (Minha conta) -----------------------------------------
+  // Mesmos tipos e limite do servidor (App\Support\FotoPerfil). Foto grande de
+  // celular é reduzida aqui antes do envio, para caber nos 2 MB.
+  var TIPOS_FOTO = ["image/jpeg", "image/png", "image/webp"];
+  var MAX_FOTO = 2 * 1024 * 1024;
+  var MAX_ORIGINAL = 20 * 1024 * 1024;
+
+  function erroFoto(form, msg) {
+    var p = form.querySelector("[data-foto-erro]");
+    p.textContent = msg;
+    p.hidden = !msg;
+  }
+
+  function cancelarFoto(form) {
+    var previa = form.querySelector("[data-foto-previa]");
+    if (previa.dataset.original !== undefined) previa.innerHTML = previa.dataset.original;
+    if (form.urlPrevia) { URL.revokeObjectURL(form.urlPrevia); form.urlPrevia = null; }
+    form.querySelector("[data-foto-arquivo]").value = "";
+    form.querySelector("[data-foto-acoes]").hidden = true;
+  }
+
+  // Recorte quadrado de até 1024px em JPEG. O navegador já aplica a rotação
+  // da foto (EXIF) ao desenhar. Sem suporte, segue o arquivo original.
+  function reduzirFoto(arquivo, url) {
+    if (!window.DataTransfer || !HTMLCanvasElement.prototype.toBlob) return Promise.resolve(arquivo);
+    return new Promise(function (pronto) {
+      var img = new Image();
+      img.onload = function () {
+        var lado = Math.min(img.naturalWidth, img.naturalHeight);
+        var destino = Math.min(1024, lado);
+        var c = document.createElement("canvas");
+        c.width = c.height = destino;
+        var ctx = c.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, destino, destino);
+        ctx.drawImage(img, (img.naturalWidth - lado) / 2, (img.naturalHeight - lado) / 2, lado, lado, 0, 0, destino, destino);
+        c.toBlob(function (blob) {
+          pronto(blob ? new File([blob], "foto.jpg", { type: "image/jpeg" }) : arquivo);
+        }, "image/jpeg", 0.9);
+      };
+      img.onerror = function () { pronto(arquivo); };
+      img.src = url;
+    });
+  }
+
+  document.addEventListener("change", function (e) {
+    var entrada = e.target.closest("[data-foto-arquivo]");
+    if (!entrada) return;
+    var form = entrada.closest("[data-foto]");
+    var arquivo = entrada.files && entrada.files[0];
+    erroFoto(form, "");
+    if (!arquivo) { cancelarFoto(form); return; }
+
+    if (TIPOS_FOTO.indexOf(arquivo.type) === -1) {
+      cancelarFoto(form);
+      erroFoto(form, "A foto precisa ser uma imagem JPG, PNG ou WebP.");
+      return;
+    }
+    if (arquivo.size > MAX_ORIGINAL) {
+      cancelarFoto(form);
+      erroFoto(form, "Essa imagem é grande demais. Escolha uma de até 20 MB.");
+      return;
+    }
+
+    var previa = form.querySelector("[data-foto-previa]");
+    if (previa.dataset.original === undefined) previa.dataset.original = previa.innerHTML;
+    if (form.urlPrevia) URL.revokeObjectURL(form.urlPrevia);
+    form.urlPrevia = URL.createObjectURL(arquivo);
+    var img = new Image();
+    img.alt = "Prévia da nova foto";
+    img.src = form.urlPrevia;
+    previa.innerHTML = "";
+    previa.appendChild(img);
+
+    reduzirFoto(arquivo, form.urlPrevia).then(function (final) {
+      if (final.size > MAX_FOTO) {
+        cancelarFoto(form);
+        erroFoto(form, "A foto pode ter no máximo 2 MB.");
+        return;
+      }
+      if (final !== arquivo) {
+        var dt = new DataTransfer();
+        dt.items.add(final);
+        entrada.files = dt.files;
+      }
+      form.querySelector("[data-foto-acoes]").hidden = false;
+    });
+  });
+
+  document.addEventListener("click", function (e) {
+    var cancelar = e.target.closest("[data-foto-cancelar]");
+    if (cancelar) cancelarFoto(cancelar.closest("[data-foto]"));
+  });
+
+  document.addEventListener("submit", function (e) {
+    if (e.target.closest("[data-foto-remover]") && !window.confirm("Remover a foto de perfil?")) {
+      e.preventDefault();
+      return;
+    }
+    var form = e.target.closest("[data-foto]");
+    if (!form) return;
+    var btn = form.querySelector("[data-foto-acoes] button[type=submit]");
+    if (btn) { btn.disabled = true; btn.textContent = "Salvando…"; }
+  });
+
   // Página do relatório (fora da janela).
   document.querySelectorAll("[data-relatorio]").forEach(iniciarRelatorio);
 

@@ -52,6 +52,13 @@ Route::middleware(['auth', 'perfil'])->group(function () {
     Route::get('/minha-conta', [ContaController::class, 'edit'])->name('conta.edit');
     Route::put('/minha-conta', [ContaController::class, 'update'])->name('conta.update');
 
+    // Foto de perfil: cada um troca a própria; a imagem só é entregue com login.
+    Route::post('/minha-conta/foto', [ContaController::class, 'salvarFoto'])->name('conta.foto.salvar');
+    Route::delete('/minha-conta/foto', [ContaController::class, 'removerFoto'])->name('conta.foto.remover');
+    Route::get('/usuarios/{usuario}/foto', [ContaController::class, 'foto'])
+        ->whereNumber('usuario')
+        ->name('usuarios.foto');
+
     // Leitura — os três perfis
     Route::get('/postagens', [PostagemController::class, 'index'])->name('postagens.index');
     Route::get('/postagens/{postagem}', [PostagemController::class, 'show'])
