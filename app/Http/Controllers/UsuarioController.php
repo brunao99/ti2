@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\FotoPerfil;
 use App\Support\Telefone;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -83,6 +84,11 @@ class UsuarioController extends Controller
 
         if ($usuario->is($request->user())) {
             return back()->withErrors(['usuario' => 'Você não pode excluir a própria conta.']);
+        }
+
+        // A foto sai junto: o arquivo não fica órfão no disco.
+        if ($usuario->foto) {
+            FotoPerfil::disco()->delete($usuario->foto);
         }
 
         $usuario->delete();

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\FotoPerfil;
 use App\Support\Telefone;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,7 +21,8 @@ class User extends Authenticatable
 
     // alerta_consentimento_em fica de fora de propósito: só a própria pessoa
     // autoriza, pela tela Minha conta. Assim nenhum formulário do ADM consegue
-    // marcar o consentimento por ela, nem editando o HTML.
+    // marcar o consentimento por ela, nem editando o HTML. A foto também fica
+    // de fora: só muda pelo envio da imagem (App\Support\FotoPerfil).
     protected $fillable = ['nome', 'usuario', 'email', 'password', 'perfil', 'ativo', 'telefone', 'contrato'];
 
     protected $hidden = ['password', 'remember_token'];
@@ -55,6 +57,25 @@ class User extends Authenticatable
     public function telefoneFormatado(bool $comDdi = true): string
     {
         return Telefone::formatar($this->telefone, $comDdi);
+    }
+
+    // ------------------------------------------------------------------ foto
+
+    /** Tem foto gravada e o arquivo ainda existe no disco. */
+    public function temFoto(): bool
+    {
+        return $this->foto !== null && FotoPerfil::disco()->exists($this->foto);
+    }
+
+    /**
+     * Endereço da foto. O "v" muda a cada troca de foto: o navegador guarda a
+     * imagem em cache e, quando ela muda, baixa a nova.
+     */
+    public function fotoUrl(): ?string
+    {
+        return $this->temFoto()
+            ? route('usuarios.foto', $this) . '?v=' . substr(md5($this->foto), 0, 10)
+            : null;
     }
 
     // ---------------------------------------------------------------- perfis

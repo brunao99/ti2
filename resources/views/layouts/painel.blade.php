@@ -2,8 +2,10 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+{{-- viewport-fit=cover libera as áreas seguras do iPhone (env(safe-area-inset-*)) para a barra inferior. --}}
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>@yield('titulo') — Painel Administrativo</title>
+@include('layouts.favicon')
 <link rel="stylesheet" href="{{ \App\Support\Asset::url('assets/style.css') }}">
 </head>
 <body>
@@ -40,7 +42,7 @@
     {{-- O nome leva a Minha conta, que concentra dados, alertas, tema e sair. --}}
     <a href="{{ route('conta.edit') }}" title="Minha conta"
        @class(['side-user', 'on' => request()->routeIs('conta.*')])>
-      <span class="avatar">{{ $eu->iniciais() }}</span>
+      <span class="avatar">@include('layouts.avatar', ['usuario' => $eu])</span>
       <span class="quem">
         <b>{{ $eu->nome }}</b>
         <span>{{ $eu->rotuloPerfil() }}</span>
@@ -56,7 +58,7 @@
         <span class="brand-sub">consultoria</span>
       </span>
       <a href="{{ route('conta.edit') }}" class="avatar" style="width:38px;height:38px"
-         title="Minha conta" aria-label="Minha conta">{{ $eu->iniciais() }}</a>
+         title="Minha conta" aria-label="Minha conta">@include('layouts.avatar', ['usuario' => $eu])</a>
     </div>
 
     <div class="topbar">
@@ -82,21 +84,21 @@
       @yield('conteudo')
     </main>
 
-    <nav class="botnav">
+    <nav class="botnav" aria-label="Navegação principal">
       <a href="{{ route('painel.inicio') }}" @class(['on' => request()->routeIs('painel.inicio')])>
         @include('layouts.icones.casa')
-        Início
+        <span>Início</span>
       </a>
       <a href="{{ route('postagens.index') }}" @class(['on' => request()->routeIs('postagens.*')])>
         @include('layouts.icones.documento')
-        Publicações
+        <span>Publicações</span>
       </a>
       {{-- A barra comporta poucos itens; o resto dos módulos vive em "Mais".
            Usuários, Alertas e Minha conta ficam lá dentro, por isso acendem este item. --}}
       <a href="{{ route('painel.mais') }}"
          @class(['on' => request()->routeIs('painel.mais') || request()->routeIs('usuarios.*') || request()->routeIs('alertas.*') || request()->routeIs('conta.*')])>
         @include('layouts.icones.mais')
-        Mais
+        <span>Mais</span>
       </a>
     </nav>
   </div>
