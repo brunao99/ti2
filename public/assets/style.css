@@ -950,11 +950,23 @@ a.side-user.on{background:rgba(255,255,255,.1)}
 .tipo-aberto{align-self:flex-start;margin-top:.25rem;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
   font-weight:700;background:var(--navy);color:#fff;padding:.14rem .45rem;border-radius:3px}
 
-/* Listagem: a cor do tipo vira a faixa lateral de cada linha, como nos
-   cartões, e o título fica na cor do texto. */
-.lista-tipo tbody tr,.lista-tipo tbody tr:hover{border-left:8px solid var(--cor-tipo)}
+/* Listagem: a cor do tipo vira a faixa lateral de cada publicação, como
+   nos cartões, e o título fica na cor do texto. No computador cada linha
+   é um cartão, com um respiro entre elas para as faixas não se juntarem. */
 .lista-tipo td.t-title{padding-left:1.1rem}
 .lista-tipo th:first-child{padding-left:calc(8px + 1.1rem)}
+@media (min-width:901px){
+  .lista-tipo{border-collapse:separate;border-spacing:0 .6rem;margin-top:-.3rem}
+  .lista-tipo thead th{border-bottom:0;padding-bottom:.2rem}
+  .lista-tipo tbody tr,.lista-tipo tbody tr:hover{border-left:0}
+  .lista-tipo tbody td{background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line);transition:background .15s}
+  .lista-tipo tbody td:first-child{border-left:8px solid var(--cor-tipo);border-radius:6px 0 0 6px}
+  .lista-tipo tbody td:last-child{border-right:1px solid var(--line);border-radius:0 6px 6px 0}
+  .lista-tipo tbody tr:hover td{background:var(--surface)}
+}
+@media (max-width:900px){
+  .lista-tipo tbody tr,.lista-tipo tbody tr:hover{border-left:8px solid var(--cor-tipo)}
+}
 
 /* Tipo aberto, ao lado do título: abre a janela de troca. */
 .cab-tipo{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;min-width:0}
