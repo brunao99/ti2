@@ -939,7 +939,7 @@ a.side-user.on{background:rgba(255,255,255,.1)}
 .tipos-ajuda{color:var(--muted);font-size:.92rem;margin:.35rem 0 1.2rem}
 .tipos-lista{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.8rem}
 .tipo-card{display:flex;flex-direction:column;gap:.3rem;height:100%;padding:1rem 1.1rem 1rem 1.2rem;
-  border:1px solid var(--line);border-left:4px solid var(--cor-tipo);border-radius:6px;
+  border:1px solid var(--line);border-left:8px solid var(--cor-tipo);border-radius:6px;
   color:var(--ink);background:var(--bg);transition:.15s}
 .tipo-card:hover{text-decoration:none;background:var(--surface);border-color:var(--muted);border-left-color:var(--cor-tipo)}
 .tipo-card:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
@@ -952,16 +952,21 @@ a.side-user.on{background:rgba(255,255,255,.1)}
 
 /* Tipo aberto, ao lado do título: abre a janela de troca. */
 .cab-tipo{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;min-width:0}
-.tipo-atual{display:inline-flex;align-items:center;gap:.55rem;max-width:100%;min-width:0;
-  padding:.45rem .55rem .45rem .8rem;border:1px solid var(--line);border-radius:99px;
-  background:var(--bg);color:var(--ink);font-size:.9rem;font-weight:700;transition:.15s}
-.tipo-atual:hover{text-decoration:none;border-color:var(--muted);background:var(--surface)}
-.tipo-atual i{width:10px;height:10px;border-radius:50%;background:var(--cor-tipo);flex:none}
+.tipo-atual{display:inline-flex;align-items:center;gap:.7rem;max-width:100%;min-width:0;
+  padding:.3rem .3rem .3rem .9rem;border:1.5px solid var(--line);border-left:8px solid var(--cor-tipo);
+  border-radius:8px;background:var(--bg);color:var(--ink);font-size:.92rem;font-weight:700;transition:.15s}
+.tipo-atual:hover{text-decoration:none;border-color:var(--navy);border-left-color:var(--cor-tipo)}
+.tipo-atual i{display:none}
 .tipo-atual-nome{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.tipo-atual-trocar{flex:none;display:flex;align-items:center;gap:.3rem;padding:.1rem .15rem .1rem .6rem;
-  border-left:1px solid var(--line);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.tipo-atual-trocar::after{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;
-  border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px)}
+/* A troca é um botão de verdade dentro do seletor, para não passar despercebida. */
+.tipo-atual-trocar{flex:none;display:inline-flex;align-items:center;gap:.45rem;padding:.55rem .9rem;
+  border-radius:5px;background:var(--navy);color:#fff;font-size:.7rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;transition:.15s}
+.tipo-atual-trocar svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;
+  stroke-linecap:round;stroke-linejoin:round}
+.tipo-atual:hover .tipo-atual-trocar{background:var(--navy-700)}
+:root[data-theme="dark"] .tipo-atual-trocar{background:var(--navy-700)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tipo-atual-trocar{background:var(--navy-700)}}
 
 .tipo-atual.m-only{display:none}
 
@@ -974,7 +979,7 @@ a.side-user.on{background:rgba(255,255,255,.1)}
 .tipos-box .x{display:inline-flex;align-items:center;justify-content:center;border-radius:4px}
 .tipos-box .modal-body{padding:1.2rem 1.5rem 1.5rem}
 .tipos-box .tipos-lista{grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
-.tipos-box .tipo-card{padding:.75rem .9rem .75rem 1rem}
+.tipos-box .tipo-card{padding:.75rem .9rem .75rem 1rem;border-left-width:8px}
 
 @media (max-width:900px){
   .tipo-atual.m-tipo{display:flex;width:100%;margin-bottom:.8rem}
