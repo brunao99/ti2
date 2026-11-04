@@ -75,7 +75,7 @@
         <span>{{ $postagens->count() }} {{ Str::plural('publicação', $postagens->count()) }}</span>
       </div>
 
-      <table>
+      <table class="lista-tipo" style="--cor-tipo: var(--c-{{ $info['cor'] }})">
         <thead>
           <tr>
             @include('postagens._cabecalho-ordenavel', ['campo' => 'titulo',          'rotulo' => 'Título',   'largura' => null])
@@ -89,7 +89,7 @@
           @foreach ($postagens as $postagem)
             <tr>
               <td class="t-title">
-                <a class="{{ $postagem->classeCor() }}" href="{{ route('postagens.show', $postagem) }}">{{ $postagem->titulo }}</a>
+                <a href="{{ route('postagens.show', $postagem) }}">{{ $postagem->titulo }}</a>
               </td>
               <td class="t-date">{{ $postagem->data_publicacao->format('d/m/Y') }}</td>
               <td>

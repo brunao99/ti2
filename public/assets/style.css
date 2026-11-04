@@ -950,6 +950,12 @@ a.side-user.on{background:rgba(255,255,255,.1)}
 .tipo-aberto{align-self:flex-start;margin-top:.25rem;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
   font-weight:700;background:var(--navy);color:#fff;padding:.14rem .45rem;border-radius:3px}
 
+/* Listagem: a cor do tipo vira a faixa lateral de cada linha, como nos
+   cartões, e o título fica na cor do texto. */
+.lista-tipo tbody tr,.lista-tipo tbody tr:hover{border-left:8px solid var(--cor-tipo)}
+.lista-tipo td.t-title{padding-left:1.1rem}
+.lista-tipo th:first-child{padding-left:calc(8px + 1.1rem)}
+
 /* Tipo aberto, ao lado do título: abre a janela de troca. */
 .cab-tipo{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;min-width:0}
 .tipo-atual{display:inline-flex;align-items:center;gap:.7rem;max-width:100%;min-width:0;
@@ -983,6 +989,7 @@ a.side-user.on{background:rgba(255,255,255,.1)}
 
 @media (max-width:900px){
   .tipo-atual.m-tipo{display:flex;width:100%;margin-bottom:.8rem}
+  .lista-tipo td.t-title{padding-left:0}
   .modal-tipos{left:0;bottom:calc(var(--botnav-h) + env(safe-area-inset-bottom))}
   .tipos-box{max-height:calc(100% - 3rem);border-radius:12px 12px 0 0}
   .tipos-box .tipos-lista{grid-template-columns:1fr}
