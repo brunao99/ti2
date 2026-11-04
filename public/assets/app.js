@@ -100,7 +100,7 @@
     modal.classList.add("show");
     document.body.classList.add("modal-aberta");
     // Primeiro campo do formulário; o X só se nada mais houver.
-    var foco = modal.querySelector(".modal-body select, .modal-body input:not([type=hidden]), .modal-body textarea")
+    var foco = modal.querySelector(".modal-body [aria-current], .modal-body select, .modal-body input:not([type=hidden]), .modal-body textarea")
       || modal.querySelector("button");
     if (foco) foco.focus();
   }

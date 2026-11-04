@@ -126,7 +126,7 @@ class AlertaTest extends TestCase
         $postagem = $this->publicacao($adm);
 
         $this->actingAs($adm)
-            ->get(route('postagens.index'))
+            ->get(route('postagens.index', ['tipo' => $postagem->tipo]))
             ->assertOk()
             ->assertSee('href="' . route('alertas.enviar', $postagem) . '" data-modal-envio', false);
     }

@@ -490,33 +490,14 @@ tbody tr:hover{border-left-color:var(--blue)}
   #editor-area{min-height:170px;padding:.9rem}
 }
 
-/* ---------- filtro por tipo, com caixas de marcação ----------
-   A caixa nativa fica escondida e o <span> vira a pílula. O estado marcado
-   vem do :checked, então funciona sem JavaScript — e continua acessível
-   por teclado, porque o input real ainda está lá. */
+/* ---------- busca da listagem de publicações ---------- */
 .filters{flex-direction:column;align-items:stretch;gap:.9rem}
 .filtro-busca{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
 .filtro-busca .inp-box{flex:1 1 240px;min-width:180px}
 
-.filtro-tipos{border:0;padding:0;margin:0}
-.filtro-tipos legend{padding:0;margin-bottom:.55rem;display:flex;align-items:center;gap:.5rem}
-.conta-sel{font-family:var(--mono);font-size:.68rem;letter-spacing:.04em;
-  color:var(--blue);text-transform:none;font-weight:400}
-
-.tipos-grade{display:flex;flex-wrap:wrap;gap:.45rem}
-.pill-check{cursor:pointer;display:inline-flex}
-.pill-check input{position:absolute;opacity:0;width:0;height:0}
-.pill-check span{display:inline-block;padding:.4rem .9rem;border:1px solid var(--line);
-  border-radius:99px;font-size:.82rem;transition:.12s;user-select:none;white-space:nowrap}
-.pill-check:hover span{border-color:var(--muted)}
-.pill-check input:checked + span{background:var(--navy);color:#fff;
-  border-color:var(--navy);font-weight:700}
-/* Foco visível: sem isso, quem navega por teclado não enxerga onde está. */
-.pill-check input:focus-visible + span{outline:2px solid var(--blue);outline-offset:2px}
-
 @media (max-width:900px){
   .filtro-busca .inp-box{flex:1 1 100%}
-  .pill-check span{padding:.35rem .75rem;font-size:.78rem}
+}
 }
 
 /* ---------- ordenação da listagem ---------- */
@@ -949,3 +930,56 @@ a.side-user.on{background:rgba(255,255,255,.1)}
 .foto-remover button{background:none;border:0;padding:.3rem;color:var(--muted);font-size:.8rem;
   text-decoration:underline;cursor:pointer}
 .foto-remover button:hover{color:var(--ink)}
+
+/* ---------- Publicações por tipo ---------- */
+/* Cartões de tipo (tela de escolha e janela de troca). A cor do tipo vai
+   na barra lateral do cartão; o nome fica na cor do texto, para ler bem
+   também nos tons claros, como o rosa. */
+.tipos-escolha{padding-top:.4rem}
+.tipos-ajuda{color:var(--muted);font-size:.92rem;margin:.35rem 0 1.2rem}
+.tipos-lista{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:.8rem}
+.tipo-card{display:flex;flex-direction:column;gap:.3rem;height:100%;padding:1rem 1.1rem 1rem 1.2rem;
+  border:1px solid var(--line);border-left:4px solid var(--cor-tipo);border-radius:6px;
+  color:var(--ink);background:var(--bg);transition:.15s}
+.tipo-card:hover{text-decoration:none;background:var(--surface);border-color:var(--muted);border-left-color:var(--cor-tipo)}
+.tipo-card:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.tipo-card b{font-size:1rem;line-height:1.3}
+.tipo-num{font-size:.86rem}
+.tipo-ultima{font-size:.78rem;color:var(--muted)}
+.tipo-card.on{background:var(--surface);box-shadow:inset 0 0 0 1px var(--navy);border-color:var(--navy);border-left-color:var(--cor-tipo)}
+.tipo-aberto{align-self:flex-start;margin-top:.25rem;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;
+  font-weight:700;background:var(--navy);color:#fff;padding:.14rem .45rem;border-radius:3px}
+
+/* Tipo aberto, ao lado do título: abre a janela de troca. */
+.cab-tipo{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;min-width:0}
+.tipo-atual{display:inline-flex;align-items:center;gap:.55rem;max-width:100%;min-width:0;
+  padding:.45rem .55rem .45rem .8rem;border:1px solid var(--line);border-radius:99px;
+  background:var(--bg);color:var(--ink);font-size:.9rem;font-weight:700;transition:.15s}
+.tipo-atual:hover{text-decoration:none;border-color:var(--muted);background:var(--surface)}
+.tipo-atual i{width:10px;height:10px;border-radius:50%;background:var(--cor-tipo);flex:none}
+.tipo-atual-nome{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.tipo-atual-trocar{flex:none;display:flex;align-items:center;gap:.3rem;padding:.1rem .15rem .1rem .6rem;
+  border-left:1px solid var(--line);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.tipo-atual-trocar::after{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;
+  border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px)}
+
+.tipo-atual.m-only{display:none}
+
+/* Janela de troca: cobre só o conteúdo. A barra lateral (computador) e a
+   barra inferior (celular) continuam visíveis e clicáveis. */
+.modal-tipos{left:var(--sidebar-w)}
+.tipos-box{max-width:760px;border-radius:8px;box-shadow:0 24px 60px rgba(10,20,30,.35)}
+.tipos-box .modal-head{padding:1.1rem 1.5rem}
+.tipos-box .modal-head h2{font-size:1.4rem;margin-top:.2rem}
+.tipos-box .x{display:inline-flex;align-items:center;justify-content:center;border-radius:4px}
+.tipos-box .modal-body{padding:1.2rem 1.5rem 1.5rem}
+.tipos-box .tipos-lista{grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
+.tipos-box .tipo-card{padding:.75rem .9rem .75rem 1rem}
+
+@media (max-width:900px){
+  .tipo-atual.m-tipo{display:flex;width:100%;margin-bottom:.8rem}
+  .modal-tipos{left:0;bottom:calc(var(--botnav-h) + env(safe-area-inset-bottom))}
+  .tipos-box{max-height:calc(100% - 3rem);border-radius:12px 12px 0 0}
+  .tipos-box .tipos-lista{grid-template-columns:1fr}
+  .tipos-lista{grid-template-columns:1fr;gap:.6rem}
+}

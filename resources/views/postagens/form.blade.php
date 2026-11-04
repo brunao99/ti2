@@ -5,14 +5,14 @@
 @section('titulo', $editando ? 'Editar publicação' : 'Nova publicação')
 
 @section('cabecalho')
-  <a class="voltar" href="{{ route('postagens.index') }}"><span>←</span> Publicações</a>
+  <a class="voltar" href="{{ route('postagens.index', $postagem->tipo ? ['tipo' => $postagem->tipo] : []) }}"><span>←</span> Publicações</a>
   <h1 style="margin-top:.3rem">{{ $editando ? 'Editar publicação' : 'Nova publicação' }}</h1>
 @endsection
 
 @section('conteudo')
 
   <div class="m-only">
-    <a class="voltar" href="{{ route('postagens.index') }}"><span>←</span> Publicações</a>
+    <a class="voltar" href="{{ route('postagens.index', $postagem->tipo ? ['tipo' => $postagem->tipo] : []) }}"><span>←</span> Publicações</a>
     <h1 style="margin-top:.3rem">{{ $editando ? 'Editar publicação' : 'Nova publicação' }}</h1>
   </div>
 
@@ -93,7 +93,7 @@
                 style="margin-bottom:1rem">Salvar rascunho</button>
 
         <p style="text-align:center">
-          <a href="{{ route('postagens.index') }}">Cancelar</a>
+          <a href="{{ route('postagens.index', $postagem->tipo ? ['tipo' => $postagem->tipo] : []) }}">Cancelar</a>
         </p>
       </aside>
     </div>
