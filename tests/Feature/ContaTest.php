@@ -72,6 +72,18 @@ class ContaTest extends TestCase
             ->assertSee($cliente->telefoneFormatado(comDdi: false));
     }
 
+    public function test_logo_aparece_na_barra_lateral_e_no_topo_do_celular(): void
+    {
+        $html = $this->actingAs(User::factory()->create())->get(route('painel.inicio'))->assertOk()->getContent();
+
+        // A mesma logo (layouts/logo.blade.php) nas duas marcas: barra lateral e topo do celular.
+        $this->assertSame(2, substr_count($html, '<svg class="wifi"'));
+        $this->assertMatchesRegularExpression(
+            '/<div class="mtop">.*?<span class="mtop-marca">.*?Algoritmos e Dados.*?consultoria.*?<svg class="wifi".*?<\/span>\s*<a href=/s',
+            $html
+        );
+    }
+
     public function test_css_e_js_saem_com_versao_no_endereco(): void
     {
         // Sem a versão, o navegador reaproveitava o CSS antigo depois de um

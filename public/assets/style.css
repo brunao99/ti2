@@ -284,6 +284,8 @@ body.modal-aberta{overflow:hidden}
 .mtop .brand-name{color:#fff;font-size:1.05rem}
 .mtop .brand-sub{color:rgba(255,255,255,.7)}
 .mtop .wifi{color:#fff}
+/* Marca do topo no celular: nome, "consultoria" e a logo, como na barra lateral. */
+.mtop-marca{display:flex;align-items:center;gap:.6rem;min-width:0}
 
 .note{background:var(--surface);border-left:3px solid var(--blue);padding:1rem 1.2rem;
   font-size:.9rem;color:var(--muted);margin-bottom:1.6rem}
@@ -930,6 +932,26 @@ a.side-user.on{background:rgba(255,255,255,.1)}
 .foto-remover button{background:none;border:0;padding:.3rem;color:var(--muted);font-size:.8rem;
   text-decoration:underline;cursor:pointer}
 .foto-remover button:hover{color:var(--ink)}
+
+/* Foto ampliada: a imagem inteira, nas proporções dela. O círculo é só dos
+   avatares (object-fit: cover); aqui nada é cortado nem esticado. */
+button.avatar{border:0;padding:0;cursor:zoom-in}
+button.avatar:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
+span.avatar-g img{cursor:zoom-in}
+/* Sempre no centro da tela: no celular as outras janelas sobem de baixo, esta não. */
+.modal-foto{background:rgba(8,14,20,.86);padding:1rem;align-items:center}
+.foto-ampliada{display:flex}
+/* A animação fica na imagem, e não na caixa: um transform na caixa prenderia
+   o botão de fechar (position:fixed) a ela enquanto a janela abre. */
+.modal.show .foto-ampliada img{animation:modal-entra .22s cubic-bezier(.2,.8,.2,1)}
+@media (prefers-reduced-motion:reduce){.modal.show .foto-ampliada img{animation:none}}
+/* A altura deixa livre a faixa do botão de fechar, em cima, e o mesmo embaixo. */
+.foto-ampliada img{display:block;width:auto;height:auto;border-radius:6px;background:#fff;
+  max-width:min(100vw - 2rem,1200px);
+  max-height:calc(100vh - 8rem);max-height:calc(100dvh - 8rem)}
+.modal-foto .x{position:fixed;top:max(.8rem,env(safe-area-inset-top));right:max(.8rem,env(safe-area-inset-right));
+  background:rgba(8,14,20,.6);border-color:rgba(255,255,255,.55)}
+.modal-foto .x:hover{background:rgba(255,255,255,.16)}
 
 /* ---------- Publicações por tipo ---------- */
 /* Cartões de tipo (tela de escolha e janela de troca). A cor do tipo vai
