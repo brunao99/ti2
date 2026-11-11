@@ -19,11 +19,11 @@ use Illuminate\Support\Collection;
  */
 class TelaAgenda
 {
-    public const VISOES = ['dia', 'semana', 'mes'];
+    /** "semana" é a semana de trabalho (segunda a sexta); "semana-completa" tem os sete dias. */
+    public const VISOES = ['dia', 'semana', 'semana-completa', 'mes'];
 
-    /** A grade mostra pelo menos este intervalo de horas. */
-    private const HORA_INICIAL = 8;
-    private const HORA_FINAL = 18;
+    /** A grade tem as 24 horas e rola; ao abrir, mostra a partir deste horário (minutos). */
+    private const ABRE_EM = 7 * 60 + 30;
 
     /** Altura de uma hora na grade, em pixels (igual à variável --ag-hora do CSS). */
     public const ALTURA_HORA = 72;
@@ -43,7 +43,8 @@ class TelaAgenda
         $hoje = AgendaEvento::hoje();
         $agora = AgendaEvento::agora();
         $visao = $visaoPedida ?? 'semana';       // computador
-        $visaoMovel = $visaoPedida ?? 'dia';     // celular
+        // Celular: a semana já mostra os sete dias, em lista.
+        $visaoMovel = $visaoPedida === 'semana-completa' ? 'semana' : ($visaoPedida ?? 'dia');
 
         $segunda = $data->startOfWeek(CarbonInterface::MONDAY);
         $semana = $this->dias($segunda, 7);
@@ -63,6 +64,7 @@ class TelaAgenda
         $colunas = match ($visao) {
             'dia' => [$data],
             'mes' => [],
+            'semana-completa' => $semana,
             default => array_slice($semana, 0, 5),
         };
 
@@ -70,6 +72,7 @@ class TelaAgenda
         [$periodoDe, $periodoAte] = match ($visao) {
             'dia' => [$data, $data],
             'mes' => [$data->startOfMonth(), $data->endOfMonth()->startOfDay()],
+            'semana-completa' => [$segunda, $segunda->addDays(6)],
             default => [$segunda, $segunda->addDays(4)],
         };
 
@@ -83,7 +86,7 @@ class TelaAgenda
             'destinatarios' => $destinatarios,
             'semAutorizacao' => $semAutorizacao,
 
-            'rotulo' => $this->rotulo($visao, $data, $segunda),
+            'rotulo' => $this->rotulo($visao, $data, $segunda, $visao === 'semana-completa' ? 6 : 4),
             'anterior' => $this->vizinho($visao, $data, -1),
             'proximo' => $this->vizinho($visao, $data, 1),
             'anteriorMovel' => $visaoMovel === 'mes' ? $data->subMonthNoOverflow() : $data->subWeek(),
@@ -96,10 +99,12 @@ class TelaAgenda
                 'mes' => $mini,
                 'anterior' => $mini->subMonthNoOverflow(),
                 'proximo' => $mini->addMonthNoOverflow(),
-                // Destaque: o dia, na visão Dia; a semana de trabalho nas outras.
-                'semanas' => $visao === 'dia'
-                    ? $this->semanasDoMes($mini, $porDia, $feriados, $hoje, $data, $data)
-                    : $this->semanasDoMes($mini, $porDia, $feriados, $hoje, $segunda, $segunda->addDays(4)),
+                // Destaque: o dia, na visão Dia; a semana (de trabalho ou inteira) nas outras.
+                'semanas' => match ($visao) {
+                    'dia' => $this->semanasDoMes($mini, $porDia, $feriados, $hoje, $data, $data),
+                    'semana-completa' => $this->semanasDoMes($mini, $porDia, $feriados, $hoje, $segunda, $segunda->addDays(6)),
+                    default => $this->semanasDoMes($mini, $porDia, $feriados, $hoje, $segunda, $segunda->addDays(4)),
+                },
             ],
 
             'grade' => $colunas ? $this->grade($colunas, $porDia, $feriados, $hoje, $agora, $destinatarios) : null,
@@ -164,7 +169,7 @@ class TelaAgenda
         };
     }
 
-    private function rotulo(string $visao, CarbonImmutable $data, CarbonImmutable $segunda): string
+    private function rotulo(string $visao, CarbonImmutable $data, CarbonImmutable $segunda, int $ultimoDia = 4): string
     {
         if ($visao === 'dia') {
             return DataPt::extenso($data, true);
@@ -174,7 +179,7 @@ class TelaAgenda
             return DataPt::mesAno($data, true);
         }
 
-        $sexta = $segunda->addDays(4);
+        $sexta = $segunda->addDays($ultimoDia);
 
         return $segunda->month === $sexta->month
             ? sprintf('%s–%s de %s de %d', $segunda->format('d'), $sexta->format('d'), DataPt::mes($sexta), $sexta->year)
@@ -215,8 +220,10 @@ class TelaAgenda
 
     private function grade(array $colunas, Collection $porDia, Collection $feriados, CarbonImmutable $hoje, CarbonImmutable $agora, int $destinatarios): array
     {
-        $inicio = self::HORA_INICIAL;
-        $fim = self::HORA_FINAL;
+        // As 24 horas ficam na grade, que rola dentro da própria área.
+        $inicio = 0;
+        $fim = 24;
+        $primeiro = null; // minuto do evento mais cedo da tela
         $dias = [];
 
         foreach ($colunas as $dia) {
@@ -224,11 +231,8 @@ class TelaAgenda
             $todas = $porDia[$chave] ?? collect();
             $comHora = $todas->reject->semHorario()->values();
 
-            // A grade cresce para caber o que começa antes das 8h ou termina depois das 18h.
             foreach ($comHora as $o) {
-                $ini = $o->minutoInicio();
-                $inicio = min($inicio, intdiv($ini, 60));
-                $fim = max($fim, (int) ceil(($ini + max($o->evento->duracao(), self::MINUTOS_MINIMOS)) / 60));
+                $primeiro = min($primeiro ?? PHP_INT_MAX, $o->minutoInicio());
             }
 
             $dias[] = [
@@ -240,7 +244,6 @@ class TelaAgenda
             ];
         }
 
-        $fim = min(24, $fim);
         $porMinuto = self::ALTURA_HORA / 60;
 
         foreach ($dias as &$dia) {
@@ -248,7 +251,8 @@ class TelaAgenda
                 return [
                     'o' => $b['o'],
                     'topo' => round(($b['inicio'] - $inicio * 60) * $porMinuto, 1),
-                    'altura' => round(($b['fim'] - $b['inicio']) * $porMinuto - 3, 1),
+                    // O que passaria da meia-noite termina no fim da grade.
+                    'altura' => round((min($b['fim'], 24 * 60) - $b['inicio']) * $porMinuto - 3, 1),
                     'esquerda' => round($b['coluna'] / $b['colunas'] * 100, 3),
                     'largura' => round(100 / $b['colunas'], 3),
                     'curto' => $b['o']->evento->tipo !== AgendaEvento::COMPROMISSO,
@@ -260,16 +264,22 @@ class TelaAgenda
         unset($dia);
 
         $minutoAgora = $agora->hour * 60 + $agora->minute;
+        $temHoje = collect($dias)->contains(fn ($d) => $d['hoje']);
+
+        // Onde a grade abre: com hoje na tela, um pouco antes da hora atual; senão,
+        // no começo do expediente ou antes, se algum evento começar mais cedo.
+        $abre = $temHoje
+            ? max(0, $minutoAgora - 90)
+            : max(0, min(self::ABRE_EM, ($primeiro ?? PHP_INT_MAX) - 30));
 
         return [
             'dias' => $dias,
             'horas' => range($inicio, $fim - 1),
             'inicio' => $inicio,
             'altura' => ($fim - $inicio) * self::ALTURA_HORA,
-            // Linha de agora: só quando hoje está na tela e a hora cabe na grade.
-            'agora' => $minutoAgora >= $inicio * 60 && $minutoAgora <= $fim * 60
-                ? ['topo' => round(($minutoAgora - $inicio * 60) * $porMinuto, 1), 'hora' => $agora->format('H:i')]
-                : null,
+            // Linha de agora: aparece na coluna de hoje.
+            'agora' => ['topo' => round($minutoAgora * $porMinuto, 1), 'hora' => $agora->format('H:i')],
+            'rolarPara' => (int) round($abre * $porMinuto),
             'temDiaTodo' => collect($dias)->contains(fn ($d) => $d['diaTodo']->isNotEmpty() || $d['feriados']->isNotEmpty()),
         ];
     }

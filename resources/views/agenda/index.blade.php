@@ -13,7 +13,7 @@
     $detalhe = fn ($o) => route('agenda.eventos.detalhe', array_filter([
         'evento' => $o->evento->id, 'data' => $o->chave(), 'visao' => $visaoPedida,
     ]));
-    $visoes = ['dia' => 'Dia', 'semana' => 'Semana de trabalho', 'mes' => 'Mês'];
+    $visoes = ['dia' => 'Dia', 'semana' => 'Semana de trabalho', 'semana-completa' => 'Semana', 'mes' => 'Mês'];
 @endphp
 
 @section('titulo', 'Agenda')
