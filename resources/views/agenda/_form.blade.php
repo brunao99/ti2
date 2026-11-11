@@ -27,6 +27,7 @@
 <form method="POST" data-evento data-janela-form
       action="{{ $editando ? route('agenda.eventos.atualizar', $evento) : route('agenda.eventos.salvar') }}"
       class="modal-box ag-janela" data-tipo="{{ $tipo }}" data-resumo="{{ route('agenda.resumo') }}"
+      data-hoje="{{ $hojeIso }}" @unless ($editando) data-novo @endunless
       role="dialog" aria-modal="true" aria-labelledby="ag-form-titulo">
   @csrf
   @if ($editando) @method('PUT') @endif
@@ -182,14 +183,31 @@
 
         <fieldset class="ag-campo" data-so="compromisso">
           <legend class="label">Participantes</legend>
-          <div class="ag-chips">
+          <div class="ag-chips" data-ag-chips>
             @foreach ($administradores as $adm)
               <label class="ag-chip">
                 <input type="checkbox" name="participantes[]" value="{{ $adm->id }}" @checked(in_array($adm->id, $escolhidos, true))>
                 <span class="avatar" aria-hidden="true">{{ $adm->iniciais() }}</span>{{ $adm->nome }}
               </label>
             @endforeach
+
+            {{-- Quem não tem cadastro no painel: digitado livremente. --}}
+            @foreach (array_filter((array) old('participantes_externos', $evento->participantes_externos ?? [])) as $externo)
+              <span class="ag-chip ag-chip-externo" data-ag-externo-chip>
+                <span class="avatar" aria-hidden="true">{{ AgendaEvento::iniciaisDe($externo) }}</span>{{ $externo }}
+                <input type="hidden" name="participantes_externos[]" value="{{ $externo }}">
+                <button type="button" data-ag-remover-externo aria-label="Remover {{ $externo }}">@include('agenda._icone', ['nome' => 'fechar'])</button>
+              </span>
+            @endforeach
+
+            <span class="ag-externo-campo">
+              @include('agenda._icone', ['nome' => 'mais'])
+              <input type="text" name="participantes_externos[]" maxlength="120" data-ag-externo autocomplete="off"
+                     placeholder="Adicionar quem não tem cadastro (nome ou e-mail)"
+                     aria-label="Adicionar participante sem cadastro no painel">
+            </span>
           </div>
+          <small class="ag-dica">Digite o nome e tecle Enter para incluir. Os administradores são marcados com um clique.</small>
         </fieldset>
 
         <div class="ag-linha ag-linha-2" data-so="compromisso">

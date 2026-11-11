@@ -54,7 +54,7 @@ class AgendaEvento extends Model
     protected $fillable = [
         'tipo', 'titulo', 'data', 'hora_inicio', 'hora_fim', 'dia_inteiro',
         'repetir', 'termina', 'termina_em', 'termina_vezes',
-        'local', 'lembrar_antes', 'cliente_id',
+        'local', 'lembrar_antes', 'cliente_id', 'participantes_externos',
         'visibilidade', 'observacao', 'categoria', 'avisar_antes',
         'postagem_id', 'alert_template_id', 'user_id',
     ];
@@ -65,6 +65,7 @@ class AgendaEvento extends Model
             'data' => 'immutable_date',
             'termina_em' => 'immutable_date',
             'dia_inteiro' => 'boolean',
+            'participantes_externos' => 'array',
         ];
     }
 
@@ -195,6 +196,21 @@ class AgendaEvento extends Model
         }
 
         return (string) $this->titulo;
+    }
+
+    /** Nomes de todos os participantes: administradores e convidados sem cadastro. */
+    public function nomesDosParticipantes(): array
+    {
+        return array_merge($this->participantes->pluck('nome')->all(), $this->participantes_externos ?? []);
+    }
+
+    /** Iniciais para a etiqueta do participante: "Maria Souza" → "MS", "joao@x.com" → "J". */
+    public static function iniciaisDe(string $nome): string
+    {
+        $partes = preg_split('/\s+/', trim(explode('@', $nome)[0])) ?: [];
+        $letras = array_map(fn ($p) => mb_substr($p, 0, 1), array_slice(array_filter($partes), 0, 2));
+
+        return mb_strtoupper(implode('', $letras)) ?: '?';
     }
 
     /** "reunião"/"reuniões", "envio"/"envios"… conforme o tipo e a quantidade. */
