@@ -86,6 +86,44 @@ Isso cria os três perfis (`maria.souza` Master, `joao.lima` ADM, `novalima`
 Client), todos com a senha `trocar-esta-senha`. **Troque antes de mostrar a
 alguém.**
 
+## 5. Agenda: envio automático dos alertas programados
+
+Os alertas programados na Agenda saem sozinhos no horário marcado. Quem
+confere a hora é o agendador do Laravel, pelo comando
+`php artisan agenda:enviar-alertas`, registrado para rodar a cada minuto em
+`routes/console.php`.
+
+Para ele rodar, o servidor precisa manter o agendador ligado:
+
+- **Railway:** em **Settings → Deploy → Custom Start Command**, suba o
+  agendador junto com o site:
+
+  ```bash
+  php artisan migrate --force && (php artisan schedule:work &) && php artisan serve --host=0.0.0.0 --port=$PORT
+  ```
+
+- **cPanel:** em **Cron Jobs**, crie uma tarefa a cada minuto:
+
+  ```bash
+  * * * * * cd /home/USUARIO/caminho-do-painel && php artisan schedule:run >> /dev/null 2>&1
+  ```
+
+**Reserva:** mesmo sem o agendador, o painel confere os alertas atrasados no
+máximo uma vez por minuto, depois de responder qualquer página aberta por um
+administrador logado. Assim, um alerta não fica sem sair enquanto alguém usa
+o painel; mas, sem ninguém no painel e sem o agendador, ele só sai quando
+alguém entrar. Um envio que passou mais de 24 horas do horário sem sair
+aparece como "Falhou" na agenda e não é mais enviado.
+
+Os horários da agenda são sempre do horário de Brasília
+(`America/Sao_Paulo`), seja qual for o fuso do servidor.
+
+O calendário de feriados já vem com os feriados nacionais de 2026, os de
+Belo Horizonte e os pontos facultativos de costume (migration
+`2026_11_11_000002_cria_feriados_iniciais`). As datas móveis (Carnaval,
+Paixão de Cristo, Corpus Christi) valem só para 2026: use o botão
+"Copiar para 2027" na tela e confira os dias.
+
 ## Limitação conhecida deste setup
 
 O `Procfile` usa `php artisan serve`, que é o servidor embutido do PHP:
@@ -102,5 +140,6 @@ o cPanel já oferece — e produção vai para o cPanel, não para o Railway.
 | Erro de conexão com banco | as variáveis `DB_*` não apontam para o serviço MySQL |
 | Login não passa, volta pro formulário | `SESSION_SECURE_COOKIE=true` sem HTTPS, ou banco sem a tabela `sessions` |
 | Dados somem a cada deploy | ainda está em SQLite; falta o passo 2 |
+| Alerta programado só sai quando alguém abre o painel | o agendador não está ligado; ver o passo 5 |
 
 Os logs ficam em **Deployments → View Logs**, e é lá que o erro real aparece.
