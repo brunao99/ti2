@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'perfil' => \App\Http\Middleware\VerificaPerfil::class,
         ]);
 
+        // Reserva do agendador dos alertas programados (ver a classe).
+        $middleware->web(append: [\App\Http\Middleware\EnviaAlertasDaAgenda::class]);
+
         /*
          * Railway (e cPanel com proxy, e qualquer PaaS) encerra o HTTPS na
          * borda e entrega HTTP para a aplicação. Sem confiar no proxy, o

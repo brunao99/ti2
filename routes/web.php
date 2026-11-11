@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\AgendaController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContaController;
+use App\Http\Controllers\FeriadoController;
 use App\Http\Controllers\PainelController;
 use App\Http\Controllers\PostagemController;
 use App\Http\Controllers\RelatorioController;
@@ -101,6 +103,29 @@ Route::middleware(['auth', 'perfil:master,adm'])->group(function () {
     Route::get('/alertas/modelos/{modelo}/editar', fn (\App\Models\AlertTemplate $modelo) => view('alertas.modelos.form', compact('modelo')))
         ->name('alertas.modelos.editar');
     Route::put('/alertas/modelos/{modelo}', [AlertaController::class, 'salvarModelo'])->name('alertas.modelos.atualizar');
+
+    // Agenda dos administradores. As rotas fixas vêm antes das que levam o
+    // evento no endereço, para "novo", "resumo" e "avisos" não serem lidos como id.
+    Route::get('/agenda', [AgendaController::class, 'index'])->name('agenda.index');
+    Route::get('/agenda/resumo', [AgendaController::class, 'resumo'])->name('agenda.resumo');
+    Route::get('/agenda/avisos', [AgendaController::class, 'avisos'])->name('agenda.avisos');
+    Route::get('/agenda/eventos/novo', [AgendaController::class, 'criar'])->name('agenda.eventos.criar');
+    Route::post('/agenda/eventos', [AgendaController::class, 'salvar'])->name('agenda.eventos.salvar');
+    Route::get('/agenda/eventos/{evento}/editar', [AgendaController::class, 'editar'])->whereNumber('evento')->name('agenda.eventos.editar');
+    Route::put('/agenda/eventos/{evento}', [AgendaController::class, 'atualizar'])->whereNumber('evento')->name('agenda.eventos.atualizar');
+    Route::delete('/agenda/eventos/{evento}', [AgendaController::class, 'excluir'])->whereNumber('evento')->name('agenda.eventos.excluir');
+    Route::get('/agenda/eventos/{evento}/{data}', [AgendaController::class, 'detalhe'])->whereNumber('evento')->name('agenda.eventos.detalhe');
+    Route::post('/agenda/eventos/{evento}/{data}/cancelar', [AgendaController::class, 'cancelar'])->whereNumber('evento')->name('agenda.eventos.cancelar');
+    Route::post('/agenda/eventos/{evento}/{data}/enviar', [AgendaController::class, 'enviarAgora'])->whereNumber('evento')->name('agenda.eventos.enviar');
+
+    // Calendário de feriados.
+    Route::get('/agenda/feriados', [FeriadoController::class, 'index'])->name('feriados.index');
+    Route::get('/agenda/feriados/novo', [FeriadoController::class, 'criar'])->name('feriados.criar');
+    Route::post('/agenda/feriados', [FeriadoController::class, 'salvar'])->name('feriados.salvar');
+    Route::post('/agenda/feriados/copiar', [FeriadoController::class, 'copiar'])->name('feriados.copiar');
+    Route::get('/agenda/feriados/{feriado}/editar', [FeriadoController::class, 'editar'])->whereNumber('feriado')->name('feriados.editar');
+    Route::put('/agenda/feriados/{feriado}', [FeriadoController::class, 'atualizar'])->whereNumber('feriado')->name('feriados.atualizar');
+    Route::delete('/agenda/feriados/{feriado}', [FeriadoController::class, 'excluir'])->whereNumber('feriado')->name('feriados.excluir');
 
     // Relatório da prefeitura: publicações do período e alertas entregues.
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios.index');

@@ -52,6 +52,8 @@ class PainelController extends Controller
             $grupos[] = [
                 'titulo' => 'Módulos',
                 'itens'  => [
+                    ['rotulo' => 'Agenda',             'rota' => 'agenda.index',    'desc' => 'Compromissos, alertas programados e prazos'],
+                    ['rotulo' => 'Calendário de feriados', 'rota' => 'feriados.index', 'desc' => 'Feriados e pontos facultativos'],
                     ['rotulo' => 'Central de alertas', 'rota' => 'alertas.index',   'desc' => 'Disparos e histórico'],
                     ['rotulo' => 'Relatórios',         'rota' => 'relatorios.index', 'desc' => 'Publicações e alertas por período'],
                     ['rotulo' => 'Modelos de mensagem', 'rota' => 'alertas.modelos', 'desc' => 'Textos padrão dos alertas'],

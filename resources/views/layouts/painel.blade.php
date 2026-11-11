@@ -8,9 +8,11 @@
 @include('layouts.favicon')
 <link rel="stylesheet" href="{{ \App\Support\Asset::url('assets/style.css') }}">
 </head>
-<body>
-
-@php($eu = auth()->user())
+@php
+    $eu = auth()->user();
+@endphp
+{{-- Master e ADM recebem os avisos da agenda (compromisso chegando, lembrete no horário). --}}
+<body @if ($eu->podeGerenciarPostagens()) data-avisos-agenda="{{ route('agenda.avisos') }}" @endif>
 
 <div class="app">
   <aside class="side">
@@ -29,6 +31,9 @@
       <a href="{{ route('postagens.index') }}" @class(['on' => request()->routeIs('postagens.*')])>Publicações</a>
 
       @if ($eu->podeGerenciarPostagens())
+        {{-- A agenda é dos administradores: o Client não vê este item. --}}
+        <a href="{{ route('agenda.index') }}" @class(['on' => request()->routeIs('agenda.*', 'feriados.*')])>Agenda</a>
+
         {{-- Quem dispara alerta é o painel, não a prefeitura que recebe —
              por isso o Client não vê este item. --}}
         <a href="{{ route('alertas.index') }}" @class(['on' => request()->routeIs('alertas.*')])>Central de alertas</a>
@@ -72,7 +77,7 @@
       </div>
     </div>
 
-    <main class="content">
+    <main class="content @yield('classe-conteudo')">
       @if (session('ok'))
         <p class="aviso aviso-ok">{{ session('ok') }}</p>
       @endif
@@ -97,6 +102,12 @@
         @include('layouts.icones.documento')
         <span>Publicações</span>
       </a>
+      @if ($eu->podeGerenciarPostagens())
+        <a href="{{ route('agenda.index') }}" @class(['on' => request()->routeIs('agenda.*', 'feriados.*')])>
+          @include('layouts.icones.agenda')
+          <span>Agenda</span>
+        </a>
+      @endif
       {{-- A barra comporta poucos itens; o resto dos módulos vive em "Mais".
            Usuários, Alertas e Minha conta ficam lá dentro, por isso acendem este item. --}}
       <a href="{{ route('painel.mais') }}"
