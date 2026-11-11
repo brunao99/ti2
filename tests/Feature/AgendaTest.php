@@ -155,6 +155,35 @@ class AgendaTest extends TestCase
         $this->actingAs($this->adm)->get(route('agenda.index', ['data' => '2027-02-02']))->assertDontSee('Reunião com a Prefeitura');
     }
 
+    public function test_compromisso_aceita_participantes_sem_cadastro(): void
+    {
+        $this->actingAs($this->adm)->postJson(route('agenda.eventos.salvar'), [
+            'tipo' => 'compromisso', 'titulo' => 'Reunião com o secretário', 'data' => '2026-11-12',
+            'hora_inicio' => '10:00', 'hora_fim' => '11:00', 'repetir' => 'nao',
+            'participantes' => [$this->adm->id],
+            // o campo aberto vai vazio junto; nomes repetidos e espaços sobrando são limpos
+            'participantes_externos' => ['João Secretário', ' joão  secretário ', 'maria@prefeitura.mg.gov.br', ''],
+        ])->assertOk();
+
+        $evento = AgendaEvento::sole();
+        $this->assertSame(['João Secretário', 'maria@prefeitura.mg.gov.br'], $evento->participantes_externos);
+        $this->assertSame('JS', AgendaEvento::iniciaisDe('João Secretário'));
+        $this->assertSame('M', AgendaEvento::iniciaisDe('maria@prefeitura.mg.gov.br'));
+
+        $this->actingAs($this->adm)->get(route('agenda.eventos.detalhe', ['evento' => $evento, 'data' => '2026-11-12']))
+            ->assertSee('Ana Administradora, João Secretário e maria@prefeitura.mg.gov.br');
+
+        $this->actingAs($this->adm)->get(route('agenda.eventos.editar', $evento))
+            ->assertSee('value="João Secretário"', false)->assertSee('Adicionar quem não tem cadastro');
+
+        // Trocar o tipo apaga os convidados, que só existem no compromisso.
+        $this->actingAs($this->adm)->putJson(route('agenda.eventos.atualizar', $evento), [
+            'tipo' => 'lembrete', 'titulo' => 'Virou lembrete', 'data' => '2026-11-12', 'hora_inicio' => '10:00',
+            'repetir' => 'nao', 'visibilidade' => 'equipe', 'participantes_externos' => ['Alguém'],
+        ])->assertOk();
+        $this->assertNull($evento->fresh()->participantes_externos);
+    }
+
     public function test_cadastra_lembrete_e_data_importante(): void
     {
         $this->actingAs($this->adm)->post(route('agenda.eventos.salvar'), [

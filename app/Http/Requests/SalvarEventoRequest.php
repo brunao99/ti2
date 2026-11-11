@@ -60,6 +60,8 @@ class SalvarEventoRequest extends FormRequest
                 'local' => ['nullable', 'string', 'max:500'],
                 'participantes' => ['nullable', 'array'],
                 'participantes.*' => ['integer', Rule::exists('users', 'id')->whereIn('perfil', [User::MASTER, User::ADM])],
+                'participantes_externos' => ['nullable', 'array', 'max:30'],
+                'participantes_externos.*' => ['nullable', 'string', 'max:120'],
                 'lembrar_antes' => ['nullable', Rule::in(array_keys(AgendaEvento::LEMBRAR))],
                 'cliente_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('perfil', User::CLIENT)],
             ],
@@ -145,6 +147,8 @@ class SalvarEventoRequest extends FormRequest
             'postagem_id.exists' => 'Escolha uma publicação com situação "publicado".',
             'alert_template_id.*' => 'Escolha o modelo de mensagem.',
             'participantes.*' => 'Os participantes devem ser administradores do painel.',
+            'participantes_externos.max' => 'Inclua no máximo 30 participantes sem cadastro.',
+            'participantes_externos.*.max' => 'O nome de cada participante pode ter no máximo 120 caracteres.',
             'lembrar_antes.*' => 'Escolha uma opção de lembrete da lista.',
             'cliente_id.*' => 'Escolha um cliente da lista.',
             'visibilidade.*' => 'Escolha quem vê o lembrete.',
@@ -175,7 +179,7 @@ class SalvarEventoRequest extends FormRequest
             'termina' => $repete ? $v['termina'] : 'nunca',
             'termina_em' => $repete && $v['termina'] === 'data' ? $v['termina_em'] : null,
             'termina_vezes' => $repete && $v['termina'] === 'vezes' ? (int) $v['termina_vezes'] : null,
-            'local' => null, 'lembrar_antes' => null, 'cliente_id' => null,
+            'local' => null, 'lembrar_antes' => null, 'cliente_id' => null, 'participantes_externos' => null,
             'visibilidade' => 'equipe', 'observacao' => null, 'categoria' => null, 'avisar_antes' => null,
             'postagem_id' => null, 'alert_template_id' => null,
         ];
@@ -185,6 +189,7 @@ class SalvarEventoRequest extends FormRequest
                 'local' => $v['local'] ?? null,
                 'lembrar_antes' => isset($v['lembrar_antes']) ? (int) $v['lembrar_antes'] : null,
                 'cliente_id' => $v['cliente_id'] ?? null,
+                'participantes_externos' => $this->externos($v['participantes_externos'] ?? []),
             ],
             AgendaEvento::ALERTA => [
                 'postagem_id' => (int) $v['postagem_id'],
@@ -201,6 +206,20 @@ class SalvarEventoRequest extends FormRequest
                 'visibilidade' => $this->boolean('mostrar_equipe') ? 'equipe' : 'eu',
             ],
         } + $dados;
+    }
+
+    /** Nomes digitados, sem vazios nem repetidos; null quando não há nenhum. */
+    private function externos(array $nomes): ?array
+    {
+        $limpos = [];
+        foreach ($nomes as $nome) {
+            $nome = trim(preg_replace('/\s+/', ' ', (string) $nome));
+            if ($nome !== '' && ! in_array(mb_strtolower($nome), array_map('mb_strtolower', $limpos), true)) {
+                $limpos[] = $nome;
+            }
+        }
+
+        return $limpos ?: null;
     }
 
     /** @return array<int, int> */

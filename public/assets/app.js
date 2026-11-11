@@ -589,9 +589,6 @@
     if (filtro && e.target.tagName === "SELECT") filtro.submit();
   });
   document.addEventListener("click", function (e) {
-    var periodo = e.target.closest(".ag-periodo input[type=date]");
-    if (periodo && periodo.showPicker) { try { periodo.showPicker(); } catch (e8) {} }
-
     // Menu "Novo": fecha ao clicar fora ou ao escolher um tipo.
     document.querySelectorAll("details.ag-novo[open]").forEach(function (d) {
       if (!d.contains(e.target) || e.target.closest("a")) d.open = false;
@@ -719,6 +716,9 @@
     form.setAttribute("data-tipo", tipo);
     var titulo = form.querySelector("[name=titulo]");
     if (titulo && titulo.getAttribute("data-ph-" + tipo)) titulo.placeholder = titulo.getAttribute("data-ph-" + tipo);
+    // Alerta novo não pode ser programado para antes de hoje: o calendário apaga esses dias.
+    var data = form.querySelector("[name=data]");
+    if (data) data.min = tipo === "alerta" && form.hasAttribute("data-novo") ? form.getAttribute("data-hoje") : "";
     form.querySelectorAll("[data-so]").forEach(function (bloco) {
       var vale = (" " + bloco.getAttribute("data-so") + " ").indexOf(" " + tipo + " ") !== -1;
       bloco.querySelectorAll("input, select, textarea").forEach(function (c) {
@@ -748,6 +748,8 @@
     var termina = form.querySelector("[data-ag-termina]");
     var repete = repetir.value !== "nao";
     campo.hidden = !repete;
+    var fimRepeticao = form.querySelector("[name=termina_em]");
+    if (fimRepeticao) fimRepeticao.min = form.querySelector("[name=data]").value || "";
     termina.disabled = !repete;
     form.querySelectorAll("[data-termina-so]").forEach(function (el) {
       var vale = repete && el.getAttribute("data-termina-so") === termina.value;
@@ -817,7 +819,7 @@
     if (!form) return;
     if (e.target.name === "tipo") aplicarTipo(form);
     if (e.target.matches("[data-ag-dia-inteiro]")) aplicarDiaInteiro(form);
-    if (e.target.matches("[data-ag-repetir], [data-ag-termina]")) aplicarTermina(form);
+    if (e.target.matches("[data-ag-repetir], [data-ag-termina], [name=data]")) aplicarTermina(form);
     if (e.target.matches("[data-ag-postagem], [data-ag-modelo], [name=hora_inicio]")) atualizarPrevia(form);
     if (e.target.matches("[data-ag-resumo], [name=tipo]")) atualizarResumo(form);
   });
@@ -905,5 +907,303 @@
   if (urlAvisos && window.fetch) {
     buscarAvisos();
     setInterval(buscarAvisos, 60000);
+  }
+
+  // ---- participantes sem cadastro ------------------------------------------
+  // O nome digitado vira uma etiqueta (com o mesmo name, num campo escondido)
+  // ao teclar Enter ou vírgula, ou ao sair do campo.
+  function iniciaisDe(nome) {
+    var partes = nome.split("@")[0].trim().split(/\s+/).filter(Boolean).slice(0, 2);
+    return (partes.map(function (p) { return p.charAt(0); }).join("") || "?").toUpperCase();
+  }
+
+  function incluirExterno(campo) {
+    var nome = campo.value.replace(/\s+/g, " ").trim().replace(/,$/, "");
+    campo.value = "";
+    if (!nome) return;
+    var caixa = campo.closest("[data-ag-chips]");
+    var repetido = Array.prototype.some.call(caixa.querySelectorAll("[data-ag-externo-chip] input"), function (i) {
+      return i.value.toLowerCase() === nome.toLowerCase();
+    });
+    if (repetido) return;
+
+    var chip = document.createElement("span");
+    chip.className = "ag-chip ag-chip-externo";
+    chip.setAttribute("data-ag-externo-chip", "");
+    var av = document.createElement("span");
+    av.className = "avatar"; av.setAttribute("aria-hidden", "true"); av.textContent = iniciaisDe(nome);
+    var oculto = document.createElement("input");
+    oculto.type = "hidden"; oculto.name = "participantes_externos[]"; oculto.value = nome;
+    var x = document.createElement("button");
+    x.type = "button"; x.setAttribute("data-ag-remover-externo", ""); x.setAttribute("aria-label", "Remover " + nome);
+    x.innerHTML = '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+    chip.appendChild(av); chip.appendChild(document.createTextNode(nome)); chip.appendChild(oculto); chip.appendChild(x);
+    caixa.insertBefore(chip, campo.closest(".ag-externo-campo"));
+  }
+
+  document.addEventListener("keydown", function (e) {
+    var campo = e.target.closest && e.target.closest("[data-ag-externo]");
+    if (!campo) return;
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault(); // Enter aqui não envia o formulário
+      incluirExterno(campo);
+    } else if (e.key === "Backspace" && !campo.value) {
+      var chips = campo.closest("[data-ag-chips]").querySelectorAll("[data-ag-externo-chip]");
+      if (chips.length) chips[chips.length - 1].remove();
+    }
+  });
+  document.addEventListener("focusout", function (e) {
+    if (e.target.matches && e.target.matches("[data-ag-externo]")) incluirExterno(e.target);
+  });
+  document.addEventListener("click", function (e) {
+    var remover = e.target.closest("[data-ag-remover-externo]");
+    if (remover) {
+      var campo = remover.closest("[data-ag-chips]").querySelector("[data-ag-externo]");
+      remover.closest("[data-ag-externo-chip]").remove();
+      if (campo) campo.focus();
+    }
+  });
+
+  // ==== seletor de data =====================================================
+  // Calendário próprio no lugar do calendário do navegador, em todo campo de
+  // data do painel. O campo continua sendo <input type="date">: o valor segue
+  // no formato aaaa-mm-dd, dá para digitar a data e o formulário funciona sem
+  // JavaScript. No celular (toque) fica o seletor do próprio aparelho.
+  var MESES_DP = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto",
+    "Setembro", "Outubro", "Novembro", "Dezembro"];
+  var MESES_CURTOS = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+  var toque = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+  var dp = null; // { el, input, ancora, ano, mes, foco, modo }
+
+  function iso(d) {
+    return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+  }
+  function lerIso(v) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v || "");
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+  }
+  function hojeDp() { var d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function noLimite(d) {
+    var min = lerIso(dp.input.min), max = lerIso(dp.input.max);
+    return !(min && d < min) && !(max && d > max);
+  }
+
+  function botao(classe, rotulo, html) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = classe;
+    if (rotulo) b.setAttribute("aria-label", rotulo);
+    b.innerHTML = html;
+    return b;
+  }
+  var SETA = function (d) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"/></svg>';
+  };
+
+  function desenharDp() {
+    var el = dp.el, selecionada = lerIso(dp.input.value), hoje = hojeDp();
+    el.innerHTML = "";
+
+    var cab = document.createElement("div");
+    cab.className = "dp-cab";
+    var titulo = botao("dp-titulo", dp.modo === "dias" ? "Escolher mês e ano" : "Voltar aos dias",
+      (dp.modo === "dias" ? MESES_DP[dp.mes] + " " + dp.ano : String(dp.ano)) + SETA("m6 9.5 6 6 6-6"));
+    titulo.setAttribute("data-dp", "modo");
+    var navs = document.createElement("span");
+    var ant = botao("dp-nav", dp.modo === "dias" ? "Mês anterior" : "Ano anterior", SETA("m14.5 6-6 6 6 6"));
+    var prox = botao("dp-nav", dp.modo === "dias" ? "Próximo mês" : "Próximo ano", SETA("m9.5 6 6 6-6 6"));
+    ant.setAttribute("data-dp", "anterior"); prox.setAttribute("data-dp", "proximo");
+    navs.appendChild(ant); navs.appendChild(prox);
+    cab.appendChild(titulo); cab.appendChild(navs);
+    el.appendChild(cab);
+
+    if (dp.modo === "meses") {
+      var meses = document.createElement("div");
+      meses.className = "dp-meses";
+      MESES_CURTOS.forEach(function (nome, i) {
+        var b = botao("dp-mes", MESES_DP[i] + " de " + dp.ano, nome);
+        b.setAttribute("data-dp-mes", i);
+        if (selecionada && selecionada.getFullYear() === dp.ano && selecionada.getMonth() === i) b.classList.add("sel");
+        if (hoje.getFullYear() === dp.ano && hoje.getMonth() === i) b.classList.add("hoje");
+        meses.appendChild(b);
+      });
+      el.appendChild(meses);
+    } else {
+      var semana = document.createElement("div");
+      semana.className = "dp-semana";
+      semana.setAttribute("aria-hidden", "true");
+      ["D", "S", "T", "Q", "Q", "S", "S"].forEach(function (l) { var s = document.createElement("span"); s.textContent = l; semana.appendChild(s); });
+      el.appendChild(semana);
+
+      var grade = document.createElement("div");
+      grade.className = "dp-dias";
+      grade.setAttribute("role", "grid");
+      var primeiro = new Date(dp.ano, dp.mes, 1);
+      var inicio = new Date(dp.ano, dp.mes, 1 - primeiro.getDay());
+      if (!dp.foco || dp.foco.getMonth() !== dp.mes || dp.foco.getFullYear() !== dp.ano) {
+        dp.foco = selecionada && selecionada.getMonth() === dp.mes && selecionada.getFullYear() === dp.ano ? selecionada
+          : (hoje.getMonth() === dp.mes && hoje.getFullYear() === dp.ano ? hoje : primeiro);
+      }
+      for (var i = 0; i < 42; i++) {
+        var d = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i);
+        if (i === 35 && d.getMonth() !== dp.mes) break; // mês que cabe em 5 semanas
+        var b = botao("dp-dia", d.getDate() + " de " + MESES_DP[d.getMonth()].toLowerCase() + " de " + d.getFullYear(), String(d.getDate()));
+        b.setAttribute("data-dp-dia", iso(d));
+        b.tabIndex = iso(d) === iso(dp.foco) ? 0 : -1;
+        if (d.getMonth() !== dp.mes) b.classList.add("fora");
+        if (iso(d) === iso(hoje)) { b.classList.add("hoje"); b.setAttribute("aria-current", "date"); }
+        if (selecionada && iso(d) === iso(selecionada)) { b.classList.add("sel"); b.setAttribute("aria-pressed", "true"); }
+        if (!noLimite(d)) b.disabled = true;
+        grade.appendChild(b);
+      }
+      el.appendChild(grade);
+    }
+
+    var rodape = document.createElement("div");
+    rodape.className = "dp-rodape";
+    if (!dp.input.required) {
+      var limpar = botao("dp-limpar", "", "Limpar");
+      limpar.setAttribute("data-dp", "limpar");
+      rodape.appendChild(limpar);
+    } else {
+      rodape.appendChild(document.createElement("span"));
+    }
+    var hojeB = botao("dp-hoje", "", "Hoje");
+    hojeB.setAttribute("data-dp", "hoje");
+    hojeB.disabled = !noLimite(hoje);
+    rodape.appendChild(hojeB);
+    el.appendChild(rodape);
+  }
+
+  function posicionarDp() {
+    if (!dp) return;
+    var r = dp.ancora.getBoundingClientRect(), el = dp.el, folga = 8;
+    var alto = el.offsetHeight, largo = el.offsetWidth;
+    var topo = r.bottom + 6;
+    if (topo + alto > window.innerHeight - folga && r.top - alto - 6 > folga) topo = r.top - alto - 6;
+    var esquerda = Math.min(Math.max(folga, r.left), window.innerWidth - largo - folga);
+    el.style.top = Math.max(folga, topo) + "px";
+    el.style.left = esquerda + "px";
+  }
+
+  function focarDia() {
+    var alvo = dp && dp.el.querySelector(dp.modo === "dias" ? ".dp-dia[tabindex='0']" : ".dp-mes.sel, .dp-mes.hoje, .dp-mes");
+    if (alvo) alvo.focus();
+  }
+
+  function abrirDp(input, ancora) {
+    fecharDp();
+    var el = document.createElement("div");
+    el.className = "dp";
+    el.setAttribute("role", "dialog");
+    el.setAttribute("aria-label", "Escolher data");
+    document.body.appendChild(el);
+    var base = lerIso(input.value) || hojeDp();
+    dp = { el: el, input: input, ancora: ancora || input, ano: base.getFullYear(), mes: base.getMonth(), foco: base, modo: "dias" };
+    input.setAttribute("aria-expanded", "true");
+    desenharDp();
+    posicionarDp();
+    focarDia();
+  }
+
+  function fecharDp(devolverFoco) {
+    if (!dp) return;
+    var input = dp.input;
+    dp.el.remove();
+    input.setAttribute("aria-expanded", "false");
+    dp = null;
+    if (devolverFoco) input.focus({ preventScroll: true });
+  }
+
+  function escolher(valor) {
+    var input = dp.input;
+    input.value = valor;
+    fecharDp(true);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function moverFoco(dias, meses) {
+    var f = dp.foco;
+    var novo = meses
+      ? new Date(f.getFullYear(), f.getMonth() + meses, Math.min(f.getDate(), new Date(f.getFullYear(), f.getMonth() + meses + 1, 0).getDate()))
+      : new Date(f.getFullYear(), f.getMonth(), f.getDate() + dias);
+    dp.foco = novo; dp.ano = novo.getFullYear(); dp.mes = novo.getMonth();
+    desenharDp(); focarDia();
+  }
+
+  if (!toque) {
+    // Marca os campos para o CSS trocar o ícone do navegador pelo nosso.
+    var marcar = function (raiz) {
+      (raiz || document).querySelectorAll("input[type=date]").forEach(function (i) {
+        i.classList.add("dp-on");
+        i.setAttribute("aria-haspopup", "dialog");
+        i.setAttribute("aria-expanded", "false");
+      });
+    };
+    marcar();
+    new MutationObserver(function (lista) {
+      lista.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.querySelectorAll) marcar(n); }); });
+    }).observe(document.body, { childList: true, subtree: true });
+
+    document.addEventListener("mousedown", function (e) {
+      var input = e.target.closest && e.target.closest("input[type=date]");
+      if (input && !input.disabled && !input.readOnly) {
+        e.preventDefault(); // não abre o calendário do navegador
+        if (dp && dp.input === input) { fecharDp(true); return; }
+        input.focus({ preventScroll: true });
+        abrirDp(input, input.closest(".ag-periodo") || input);
+        return;
+      }
+      if (dp && !dp.el.contains(e.target)) fecharDp();
+    });
+
+    // Teclado no campo: Alt+↓ ou Enter abrem; digitar a data continua funcionando.
+    document.addEventListener("keydown", function (e) {
+      if (e.target.matches && e.target.matches("input[type=date].dp-on") && ((e.altKey && e.key === "ArrowDown") || e.key === "Enter")) {
+        if (e.key === "Enter" && e.target.form && !e.altKey && dp) return;
+        if (e.key === "Enter") e.preventDefault();
+        abrirDp(e.target, e.target.closest(".ag-periodo") || e.target);
+      }
+    });
+
+    document.addEventListener("click", function (e) {
+      if (!dp || !dp.el.contains(e.target)) return;
+      var b = e.target.closest("button");
+      if (!b || b.disabled) return;
+      var acao = b.getAttribute("data-dp");
+      if (b.hasAttribute("data-dp-dia")) return escolher(b.getAttribute("data-dp-dia"));
+      if (b.hasAttribute("data-dp-mes")) { dp.mes = +b.getAttribute("data-dp-mes"); dp.modo = "dias"; dp.foco = null; desenharDp(); return focarDia(); }
+      if (acao === "modo") { dp.modo = dp.modo === "dias" ? "meses" : "dias"; desenharDp(); return focarDia(); }
+      if (acao === "anterior" || acao === "proximo") {
+        var passo = acao === "anterior" ? -1 : 1;
+        if (dp.modo === "meses") dp.ano += passo;
+        else { var d = new Date(dp.ano, dp.mes + passo, 1); dp.ano = d.getFullYear(); dp.mes = d.getMonth(); }
+        dp.foco = null; desenharDp(); posicionarDp();
+        return;
+      }
+      if (acao === "hoje") return escolher(iso(hojeDp()));
+      if (acao === "limpar") return escolher("");
+    });
+
+    // Teclado dentro do calendário. Fase de captura: o Esc fecha só o
+    // calendário, e não a janela por baixo.
+    document.addEventListener("keydown", function (e) {
+      if (!dp || !dp.el.contains(e.target)) return;
+      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); fecharDp(true); return; }
+      if (e.key === "Tab") {
+        var foco = Array.prototype.slice.call(dp.el.querySelectorAll("button:not([disabled]):not([tabindex='-1'])"));
+        var i = foco.indexOf(document.activeElement);
+        if (e.shiftKey ? i <= 0 : i === foco.length - 1) { e.preventDefault(); foco[e.shiftKey ? foco.length - 1 : 0].focus(); }
+        return;
+      }
+      if (dp.modo !== "dias" || !e.target.matches(".dp-dia")) return;
+      var mapa = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [-7, 0], ArrowDown: [7, 0], PageUp: [0, -1], PageDown: [0, 1] };
+      if (mapa[e.key]) { e.preventDefault(); moverFoco(mapa[e.key][0], mapa[e.key][1]); }
+      else if (e.key === "Home") { e.preventDefault(); moverFoco(-dp.foco.getDay(), 0); }
+      else if (e.key === "End") { e.preventDefault(); moverFoco(6 - dp.foco.getDay(), 0); }
+    }, true);
+
+    window.addEventListener("resize", function () { fecharDp(); });
+    document.addEventListener("scroll", posicionarDp, true);
   }
 })();

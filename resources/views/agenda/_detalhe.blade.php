@@ -60,8 +60,8 @@
       @if ($local)
         <div><dt>Local</dt><dd>@if ($ehLink)<a href="{{ $local }}" target="_blank" rel="noopener noreferrer">{{ \Illuminate\Support\Str::limit($local, 60) }}</a>@else{{ $local }}@endif</dd></div>
       @endif
-      @if ($e->participantes->isNotEmpty())
-        <div><dt>Participantes</dt><dd>{{ $e->participantes->pluck('nome')->join(', ', ' e ') }}</dd></div>
+      @if ($nomes = $e->nomesDosParticipantes())
+        <div><dt>Participantes</dt><dd>{{ collect($nomes)->join(', ', ' e ') }}</dd></div>
       @endif
       @if ($e->cliente)
         <div><dt>Cliente relacionado</dt><dd>{{ $e->cliente->nome }}</dd></div>
