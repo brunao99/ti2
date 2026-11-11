@@ -53,9 +53,13 @@
 
   <div class="main">
     <div class="mtop">
-      <span>
-        <span class="brand-name">Algoritmos e Dados</span>
-        <span class="brand-sub">consultoria</span>
+      {{-- A mesma marca da barra lateral: nome, "consultoria" e a logo. --}}
+      <span class="mtop-marca">
+        <span>
+          <span class="brand-name">Algoritmos e Dados</span>
+          <span class="brand-sub">consultoria</span>
+        </span>
+        @include('layouts.logo')
       </span>
       <a href="{{ route('conta.edit') }}" class="avatar" style="width:38px;height:38px"
          title="Minha conta" aria-label="Minha conta">@include('layouts.avatar', ['usuario' => $eu])</a>

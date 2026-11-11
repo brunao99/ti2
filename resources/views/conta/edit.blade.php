@@ -13,11 +13,17 @@
 
     {{-- ---------------------------------------------------------- perfil --}}
     <aside class="conta-card conta-perfil">
-      {{-- Foto de perfil: escolher mostra a prévia; só grava ao clicar em Salvar. --}}
+      {{-- Foto de perfil: escolher mostra a prévia; só grava ao clicar em Salvar.
+           Com foto, o avatar é um botão: clicar abre a imagem inteira (janela no fim da página). --}}
       <form method="POST" action="{{ route('conta.foto.salvar') }}" enctype="multipart/form-data"
             class="foto-form" data-foto>
         @csrf
-        <span class="avatar avatar-g" data-foto-previa>@include('layouts.avatar', ['usuario' => $eu])</span>
+        @if ($eu->temFoto())
+          <button type="button" class="avatar avatar-g" data-foto-previa
+                  title="Ampliar a foto" aria-label="Ampliar a foto de perfil">@include('layouts.avatar', ['usuario' => $eu])</button>
+        @else
+          <span class="avatar avatar-g" data-foto-previa>@include('layouts.avatar', ['usuario' => $eu])</span>
+        @endif
 
         <label class="btn btn-ghost btn-sm foto-escolher">
           <input type="file" name="foto" accept="image/jpeg,image/png,image/webp" data-foto-arquivo>
@@ -202,6 +208,16 @@
       <p class="muted">Encerra a sessão neste aparelho.</p>
     </section>
 
+  </div>
+
+  {{-- Foto ampliada: a imagem inteira, nas proporções dela, sem o recorte
+       circular dos avatares. O endereço entra ao clicar no avatar, porque
+       também vale para a prévia de uma foto ainda não salva. --}}
+  <div class="modal modal-foto" id="modal-foto">
+    <div class="foto-ampliada" role="dialog" aria-modal="true" aria-label="Foto de perfil ampliada">
+      <button type="button" class="x" data-fecha aria-label="Fechar">✕</button>
+      <img alt="Foto de perfil de {{ $eu->nome }}" data-foto-ampliada>
+    </div>
   </div>
 
 @endsection

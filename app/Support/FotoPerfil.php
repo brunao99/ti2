@@ -9,13 +9,16 @@ use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
- * Foto de perfil: recebe a imagem enviada, recorta no centro em quadrado,
- * reduz para 512px e grava como JPEG no disco local (storage/app/private).
+ * Foto de perfil: recebe a imagem enviada e grava inteira, sem corte e nas
+ * proporções originais, como JPEG no disco local (storage/app/private).
  *
- * Regravar a imagem, em vez de guardar o arquivo enviado, deixa todas do
- * mesmo tamanho e descarta o que não é imagem (metadados, localização do
- * GPS, conteúdo escondido no arquivo). O disco local não é público: a foto
- * é entregue por uma rota que exige login (ContaController::foto).
+ * O círculo dos avatares é só visual (CSS, object-fit: cover). A imagem
+ * guardada é a completa, e é ela que a visualização ampliada mostra.
+ *
+ * Regravar a imagem, em vez de guardar o arquivo enviado, limita o tamanho
+ * e descarta o que não é imagem (metadados, localização do GPS, conteúdo
+ * escondido no arquivo). O disco local não é público: a foto é entregue
+ * por uma rota que exige login (ContaController::foto).
  */
 class FotoPerfil
 {
@@ -24,7 +27,8 @@ class FotoPerfil
     /** Tamanho máximo do arquivo enviado, em KB. */
     public const MAX_KB = 2048;
 
-    public const LADO = 512;
+    /** Maior lado da imagem gravada, em pixels. Acima disso ela é reduzida, sem cortar. */
+    public const LADO = 1600;
 
     private const PASTA = 'fotos';
 
@@ -42,10 +46,10 @@ class FotoPerfil
         }
 
         $imagem = self::endireitar($imagem, $arquivo->getRealPath());
-        $quadrada = self::recortar($imagem);
+        $completa = self::ajustar($imagem);
 
         ob_start();
-        imagejpeg($quadrada, null, 85);
+        imagejpeg($completa, null, 85);
         $jpeg = ob_get_clean();
 
         $caminho = self::PASTA . '/' . $usuario->id . '-' . Str::random(12) . '.jpg';
@@ -85,19 +89,22 @@ class FotoPerfil
         return $angulo ? imagerotate($imagem, $angulo, 0) : $imagem;
     }
 
-    /** Recorte central quadrado, reduzido para LADO x LADO, sobre fundo branco. */
-    private static function recortar(\GdImage $imagem): \GdImage
+    /**
+     * Imagem inteira, nas mesmas proporções, sobre fundo branco. Só diminui
+     * quando o maior lado passa de LADO; nunca corta nem amplia.
+     */
+    private static function ajustar(\GdImage $imagem): \GdImage
     {
         $largura = imagesx($imagem);
         $altura = imagesy($imagem);
-        $lado = min($largura, $altura);
-        $destino = min(self::LADO, $lado);
+        $escala = min(1, self::LADO / max($largura, $altura));
+        $novaLargura = max(1, (int) round($largura * $escala));
+        $novaAltura = max(1, (int) round($altura * $escala));
 
-        $quadrada = imagecreatetruecolor($destino, $destino);
-        imagefill($quadrada, 0, 0, imagecolorallocate($quadrada, 255, 255, 255)); // PNG transparente vira fundo branco
-        imagecopyresampled($quadrada, $imagem, 0, 0,
-            intdiv($largura - $lado, 2), intdiv($altura - $lado, 2), $destino, $destino, $lado, $lado);
+        $completa = imagecreatetruecolor($novaLargura, $novaAltura);
+        imagefill($completa, 0, 0, imagecolorallocate($completa, 255, 255, 255)); // PNG transparente vira fundo branco
+        imagecopyresampled($completa, $imagem, 0, 0, 0, 0, $novaLargura, $novaAltura, $largura, $altura);
 
-        return $quadrada;
+        return $completa;
     }
 }

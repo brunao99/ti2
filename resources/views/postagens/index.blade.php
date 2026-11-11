@@ -1,14 +1,21 @@
 @extends('layouts.painel')
 
-@section('titulo', 'Publicações')
+@php
+    $info = \App\Models\Postagem::TIPOS[$tipo];
+@endphp
+
+@section('titulo', 'Publicações — ' . $info['curto'])
 @section('cabecalho')
-  <h1>Publicações</h1>
+  <div class="cab-tipo">
+    <h1>Publicações</h1>
+    @include('postagens._tipo-atual', ['classe' => ''])
+  </div>
 @endsection
 
 @section('acoes')
   @if (auth()->user()->podeGerenciarPostagens())
     <a class="btn btn-ghost" href="{{ route('relatorios.index') }}" data-modal-relatorio>Gerar relatório</a>
-    <a class="btn" href="{{ route('postagens.create') }}">Nova publicação</a>
+    <a class="btn" href="{{ route('postagens.create', ['tipo' => $tipo]) }}">Nova publicação</a>
   @endif
 @endsection
 
@@ -17,46 +24,26 @@
   <div class="m-only m-cabecalho">
     <h1>Publicações</h1>
     @if (auth()->user()->podeGerenciarPostagens())
-      <a class="btn btn-sm" href="{{ route('postagens.create') }}">+ Nova postagem</a>
+      <a class="btn btn-sm" href="{{ route('postagens.create', ['tipo' => $tipo]) }}">+ Nova postagem</a>
     @endif
   </div>
+  @include('postagens._tipo-atual', ['classe' => 'm-only m-tipo'])
   @if (auth()->user()->podeGerenciarPostagens())
     <a class="m-only btn btn-ghost btn-block m-relatorio" href="{{ route('relatorios.index') }}" data-modal-relatorio>Gerar relatório</a>
   @endif
 
-  {{-- Filtro por tipo e busca por título. Tudo via GET, para o filtro
-       sobreviver ao recarregar e poder ser compartilhado por link. --}}
-  {{-- Caixas de marcação em vez de escolha única: com dez tipos, o mais comum
-       é querer ver dois ou três juntos. Nada marcado = todos. --}}
+  {{-- Busca por título dentro do tipo aberto. Via GET, para sobreviver ao
+       recarregar e poder ser compartilhada por link. --}}
   <form method="GET" action="{{ route('postagens.index') }}" class="filters">
-
+    <input type="hidden" name="tipo" value="{{ $tipo }}">
     <div class="filtro-busca">
       <input class="inp-box" type="search" name="busca" value="{{ $busca }}"
-             placeholder="Buscar por título">
-      <button class="btn btn-sm" type="submit">Filtrar</button>
-      @if ($tiposAtivos || $busca !== '')
-        <a class="btn btn-ghost btn-sm" href="{{ route('postagens.index') }}">Limpar</a>
+             placeholder="Buscar por título em {{ $info['curto'] }}" aria-label="Buscar por título">
+      <button class="btn btn-sm" type="submit">Buscar</button>
+      @if ($busca !== '')
+        <a class="btn btn-ghost btn-sm" href="{{ route('postagens.index', ['tipo' => $tipo]) }}">Limpar</a>
       @endif
     </div>
-
-    <fieldset class="filtro-tipos">
-      <legend class="label">
-        Tipos
-        @if ($tiposAtivos)
-          <span class="conta-sel">{{ count($tiposAtivos) }} de {{ count(\App\Models\Postagem::TIPOS) }}</span>
-        @endif
-      </legend>
-
-      <div class="tipos-grade">
-        @foreach (\App\Models\Postagem::TIPOS as $valor => $rotulo)
-          <label class="pill-check" title="{{ $rotulo['nome'] }}">
-            <input type="checkbox" name="tipos[]" value="{{ $valor }}"
-                   @checked(in_array($valor, $tiposAtivos, true))>
-            <span>{{ $rotulo['curto'] }}</span>
-          </label>
-        @endforeach
-      </div>
-    </fieldset>
   </form>
 
   {{-- No mobile a tabela vira cartões e o cabeçalho some, levando junto a
@@ -71,7 +58,6 @@
               ['data_publicacao', 'asc',  'Data — mais antigas'],
               ['titulo',          'asc',  'Título — A a Z'],
               ['titulo',          'desc', 'Título — Z a A'],
-              ['tipo',            'asc',  'Tipo'],
               ['situacao',        'asc',  'Situação'],
           ];
       @endphp
@@ -89,10 +75,9 @@
         <span>{{ $postagens->count() }} {{ Str::plural('publicação', $postagens->count()) }}</span>
       </div>
 
-      <table>
+      <table class="lista-tipo" style="--cor-tipo: var(--c-{{ $info['cor'] }})">
         <thead>
           <tr>
-            @include('postagens._cabecalho-ordenavel', ['campo' => 'tipo',            'rotulo' => 'Tipo',     'largura' => '150px'])
             @include('postagens._cabecalho-ordenavel', ['campo' => 'titulo',          'rotulo' => 'Título',   'largura' => null])
             @include('postagens._cabecalho-ordenavel', ['campo' => 'data_publicacao', 'rotulo' => 'Data',     'largura' => '130px'])
             @include('postagens._cabecalho-ordenavel', ['campo' => 'situacao',        'rotulo' => 'Situação', 'largura' => '140px'])
@@ -103,9 +88,8 @@
         <tbody>
           @foreach ($postagens as $postagem)
             <tr>
-              <td><span class="tag" title="{{ $postagem->rotuloTipo() }}">{{ $postagem->rotuloTipoCurto() }}</span></td>
               <td class="t-title">
-                <a class="{{ $postagem->classeCor() }}" href="{{ route('postagens.show', $postagem) }}">{{ $postagem->titulo }}</a>
+                <a href="{{ route('postagens.show', $postagem) }}">{{ $postagem->titulo }}</a>
               </td>
               <td class="t-date">{{ $postagem->data_publicacao->format('d/m/Y') }}</td>
               <td>
@@ -145,9 +129,31 @@
     </div>
   @empty
     <div class="empty show">
-      <h3>Nenhuma publicação encontrada</h3>
-      <p>Ajuste o filtro de tipo ou limpe o campo de busca.</p>
+      @if ($busca !== '')
+        <h3>Nada encontrado para “{{ $busca }}”</h3>
+        <p>A busca procura no título das publicações de {{ $info['nome'] }}.</p>
+      @else
+        <h3>Nenhuma publicação de {{ $info['nome'] }}</h3>
+        <p>Quando houver, elas aparecem aqui, agrupadas por mês.</p>
+      @endif
     </div>
   @endforelse
+
+  {{-- Troca de tipo sem sair da listagem. A janela deixa a navegação
+       (barra lateral e barra inferior) visível e clicável. --}}
+  <div class="modal modal-tipos" id="modal-tipos">
+    <div class="modal-box tipos-box" role="dialog" aria-modal="true" aria-labelledby="tipos-titulo">
+      <header class="modal-head">
+        <div>
+          <p class="label">Publicações</p>
+          <h2 id="tipos-titulo">Trocar tipo</h2>
+        </div>
+        <button type="button" class="x" data-fecha aria-label="Fechar">✕</button>
+      </header>
+      <div class="modal-body">
+        @include('postagens._tipos', ['resumo' => $resumo, 'atual' => $tipo])
+      </div>
+    </div>
+  </div>
 
 @endsection

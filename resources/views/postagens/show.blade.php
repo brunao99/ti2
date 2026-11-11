@@ -3,7 +3,7 @@
 @section('titulo', 'Visualizar publicação')
 
 @section('cabecalho')
-  <a class="voltar" href="{{ route('postagens.index') }}"><span>←</span> Publicações</a>
+  <a class="voltar" href="{{ route('postagens.index', ['tipo' => $postagem->tipo]) }}"><span>←</span> Publicações</a>
   <h1 style="margin-top:.3rem">Pré-visualização</h1>
 @endsection
 
@@ -19,7 +19,7 @@
 @section('conteudo')
 
   <div class="m-only">
-    <a class="voltar" href="{{ route('postagens.index') }}"><span>←</span> Publicações</a>
+    <a class="voltar" href="{{ route('postagens.index', ['tipo' => $postagem->tipo]) }}"><span>←</span> Publicações</a>
   </div>
 
   <article class="doc">

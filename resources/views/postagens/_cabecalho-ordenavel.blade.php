@@ -3,8 +3,8 @@
 
   Recebe: $campo, $rotulo, $ordem, $direcao e opcionalmente $largura.
 
-  fullUrlWithQuery preserva os filtros já aplicados (tipos marcados, busca) e
-  só troca ordem/dir — sem isso, ordenar zeraria o filtro do usuário.
+  fullUrlWithQuery preserva o tipo aberto e a busca e só troca ordem/dir —
+  sem isso, ordenar zeraria a busca do usuário.
 --}}
 @php
     $ativo = $ordem === $campo;

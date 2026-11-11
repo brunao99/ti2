@@ -6,23 +6,46 @@ use App\Models\Postagem;
 use App\Support\SanitizadorHtml;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class PostagemController extends Controller
 {
+    /** Chave da sessão com o último tipo aberto em Publicações. */
+    private const SESSAO_TIPO = 'postagens.tipo';
+
     /**
-     * Listagem agrupada por mês — Telas 05 e 06.
-     * O Client enxerga apenas publicadas; Master e ADM veem os rascunhos também.
+     * Publicações — uma listagem por tipo.
+     *
+     * Sem tipo escolhido, mostra a tela de escolha. Ela aparece no primeiro
+     * acesso depois do login, porque o tipo fica guardado na sessão: nas
+     * visitas seguintes, Publicações abre direto no último tipo, e a troca
+     * é feita pela janela de tipos, sem sair da listagem. ?escolher=1 força
+     * a tela de escolha (é o caminho do botão de troca sem JavaScript).
      */
-    public function index(Request $request): View
+    public function index(Request $request): View|RedirectResponse
     {
-        // Os tipos chegam como tipos[] das caixas marcadas. Filtramos contra a
-        // lista válida para que um parâmetro inventado na URL não vire consulta.
-        $tipos = array_values(array_intersect(
-            (array) $request->query('tipos', []),
-            Postagem::tiposValidos()
-        ));
+        $tipo = (string) $request->query('tipo', '');
+
+        if ($tipo !== '' && ! in_array($tipo, Postagem::tiposValidos(), true)) {
+            return redirect()->route('postagens.index', ['escolher' => 1]);
+        }
+
+        if ($tipo === '') {
+            $lembrado = $request->session()->get(self::SESSAO_TIPO);
+
+            if (! $request->boolean('escolher') && in_array($lembrado, Postagem::tiposValidos(), true)) {
+                return redirect()->route('postagens.index', ['tipo' => $lembrado]);
+            }
+
+            return view('postagens.tipos', [
+                'resumo' => $this->resumoPorTipo($request),
+                'atual'  => $lembrado,
+            ]);
+        }
+
+        $request->session()->put(self::SESSAO_TIPO, $tipo);
 
         $busca = trim((string) $request->query('busca', ''));
 
@@ -30,7 +53,7 @@ class PostagemController extends Controller
 
         $consulta = Postagem::query()
             ->with('autor')
-            ->dosTipos($tipos)
+            ->where('tipo', $tipo)
             ->buscando($busca);
 
         // A listagem é agrupada por mês, então a ordenação tem de respeitar
@@ -53,12 +76,42 @@ class PostagemController extends Controller
         $porMes = $consulta->get()->groupBy('mes_referencia');
 
         return view('postagens.index', [
-            'porMes'       => $porMes,
-            'tiposAtivos'  => $tipos,
-            'busca'        => $busca,
-            'ordem'        => $campo,
-            'direcao'      => $direcao,
+            'tipo'     => $tipo,
+            'porMes'   => $porMes,
+            'resumo'   => $this->resumoPorTipo($request),
+            'busca'    => $busca,
+            'ordem'    => $campo,
+            'direcao'  => $direcao,
         ]);
+    }
+
+    /**
+     * Quantas publicações cada tipo tem, quantas são rascunho e a data da
+     * mais recente — para os cartões da escolha de tipo. O Client conta só
+     * as publicadas, que são as únicas que ele vê.
+     *
+     * @return array<string, array{total: int, rascunhos: int, ultima: ?Carbon}>
+     */
+    private function resumoPorTipo(Request $request): array
+    {
+        $linhas = Postagem::query()
+            ->when($request->user()->ehClient(), fn ($q) => $q->publicadas())
+            ->selectRaw("tipo, count(*) as total, sum(case when situacao = 'rascunho' then 1 else 0 end) as rascunhos, max(data_publicacao) as ultima")
+            ->groupBy('tipo')
+            ->get()
+            ->keyBy('tipo');
+
+        $resumo = [];
+        foreach (Postagem::tiposValidos() as $tipo) {
+            $linha = $linhas->get($tipo);
+            $resumo[$tipo] = [
+                'total'     => (int) ($linha->total ?? 0),
+                'rascunhos' => (int) ($linha->rascunhos ?? 0),
+                'ultima'    => $linha?->ultima ? Carbon::parse($linha->ultima) : null,
+            ];
+        }
+
+        return $resumo;
     }
 
     /**
@@ -72,7 +125,8 @@ class PostagemController extends Controller
      */
     private function ordenacao(Request $request): array
     {
-        $permitidos = ['tipo', 'titulo', 'data_publicacao', 'situacao'];
+        // Sem "tipo": cada listagem já é de um tipo só.
+        $permitidos = ['titulo', 'data_publicacao', 'situacao'];
 
         $campo = (string) $request->query('ordem', 'data_publicacao');
         if (! in_array($campo, $permitidos, true)) {
@@ -97,9 +151,14 @@ class PostagemController extends Controller
         return view('postagens.show', ['postagem' => $postagem->load('anexos', 'autor')]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        return view('postagens.form', ['postagem' => new Postagem()]);
+        // Vindo da listagem de um tipo, o formulário já abre nesse tipo.
+        $tipo = (string) $request->query('tipo', '');
+
+        return view('postagens.form', ['postagem' => new Postagem([
+            'tipo' => in_array($tipo, Postagem::tiposValidos(), true) ? $tipo : null,
+        ])]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -132,7 +191,7 @@ class PostagemController extends Controller
         $postagem->delete();
 
         return redirect()
-            ->route('postagens.index')
+            ->route('postagens.index', ['tipo' => $postagem->tipo])
             ->with('ok', 'Publicação removida.');
     }
 

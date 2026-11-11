@@ -100,7 +100,7 @@
     modal.classList.add("show");
     document.body.classList.add("modal-aberta");
     // Primeiro campo do formulário; o X só se nada mais houver.
-    var foco = modal.querySelector(".modal-body select, .modal-body input:not([type=hidden]), .modal-body textarea")
+    var foco = modal.querySelector(".modal-body [aria-current], .modal-body select, .modal-body input:not([type=hidden]), .modal-body textarea")
       || modal.querySelector("button");
     if (foco) foco.focus();
   }
@@ -353,21 +353,24 @@
     form.querySelector("[data-foto-acoes]").hidden = true;
   }
 
-  // Recorte quadrado de até 1024px em JPEG. O navegador já aplica a rotação
-  // da foto (EXIF) ao desenhar. Sem suporte, segue o arquivo original.
+  // Imagem inteira, sem corte, com o maior lado em até 1600px (o mesmo limite
+  // do servidor), em JPEG. O navegador já aplica a rotação da foto (EXIF) ao
+  // desenhar. Sem suporte, segue o arquivo original.
+  var LADO_FOTO = 1600;
+
   function reduzirFoto(arquivo, url) {
     if (!window.DataTransfer || !HTMLCanvasElement.prototype.toBlob) return Promise.resolve(arquivo);
     return new Promise(function (pronto) {
       var img = new Image();
       img.onload = function () {
-        var lado = Math.min(img.naturalWidth, img.naturalHeight);
-        var destino = Math.min(1024, lado);
+        var escala = Math.min(1, LADO_FOTO / Math.max(img.naturalWidth, img.naturalHeight));
         var c = document.createElement("canvas");
-        c.width = c.height = destino;
+        c.width = Math.max(1, Math.round(img.naturalWidth * escala));
+        c.height = Math.max(1, Math.round(img.naturalHeight * escala));
         var ctx = c.getContext("2d");
         ctx.fillStyle = "#fff";
-        ctx.fillRect(0, 0, destino, destino);
-        ctx.drawImage(img, (img.naturalWidth - lado) / 2, (img.naturalHeight - lado) / 2, lado, lado, 0, 0, destino, destino);
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(img, 0, 0, c.width, c.height);
         c.toBlob(function (blob) {
           pronto(blob ? new File([blob], "foto.jpg", { type: "image/jpeg" }) : arquivo);
         }, "image/jpeg", 0.9);
@@ -424,6 +427,16 @@
   document.addEventListener("click", function (e) {
     var cancelar = e.target.closest("[data-foto-cancelar]");
     if (cancelar) cancelarFoto(cancelar.closest("[data-foto]"));
+
+    // Ampliar: abre a imagem que está no avatar (a foto salva ou a prévia),
+    // inteira. Sem foto, o avatar só tem as iniciais e nada acontece.
+    var avatar = e.target.closest("[data-foto-previa]");
+    var foto = avatar && avatar.querySelector("img");
+    var janela = document.getElementById("modal-foto");
+    if (foto && janela) {
+      janela.querySelector("[data-foto-ampliada]").src = foto.currentSrc || foto.src;
+      abrirModal(janela, avatar);
+    }
   });
 
   document.addEventListener("submit", function (e) {

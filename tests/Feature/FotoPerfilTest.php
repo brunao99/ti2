@@ -31,7 +31,7 @@ class FotoPerfilTest extends TestCase
             ->assertSee('<span class="avatar">IM</span>', false);
     }
 
-    public function test_envia_a_foto_grava_quadrada_e_mostra_no_painel(): void
+    public function test_envia_a_foto_grava_inteira_e_mostra_no_painel(): void
     {
         $this->actingAs($this->cliente)
             ->post(route('conta.foto.salvar'), ['foto' => UploadedFile::fake()->image('eu.png', 900, 600)])
@@ -42,13 +42,65 @@ class FotoPerfilTest extends TestCase
         $this->assertNotNull($this->cliente->foto);
         Storage::disk('local')->assertExists($this->cliente->foto);
 
-        // Regravada como JPEG quadrado de 512px.
+        // Regravada como JPEG, inteira: mesma largura e altura, sem corte quadrado.
         [$largura, $altura, $tipo] = getimagesizefromstring(Storage::disk('local')->get($this->cliente->foto));
-        $this->assertSame([512, 512, IMAGETYPE_JPEG], [$largura, $altura, $tipo]);
+        $this->assertSame([900, 600, IMAGETYPE_JPEG], [$largura, $altura, $tipo]);
 
         // Aparece no cartão de perfil, na barra lateral e no topo do celular.
         $pagina = $this->actingAs($this->cliente)->get(route('conta.edit'))->assertOk()->assertSee('Trocar foto');
         $this->assertSame(3, substr_count($pagina->getContent(), '<img src="' . e($this->cliente->fotoUrl()) . '"'));
+    }
+
+    public function test_foto_grande_e_reduzida_sem_cortar(): void
+    {
+        // [enviada] => [gravada]: o maior lado cai para 1600px e a proporção se mantém.
+        $casos = [
+            'horizontal' => [[3200, 1600], [1600, 800]],
+            'vertical'   => [[1000, 2500], [640, 1600]],
+            'quadrada'   => [[2000, 2000], [1600, 1600]],
+            'pequena'    => [[300, 200], [300, 200]],
+        ];
+
+        foreach ($casos as $nome => [[$l, $a], $esperado]) {
+            $this->actingAs($this->cliente)
+                ->post(route('conta.foto.salvar'), ['foto' => UploadedFile::fake()->image("{$nome}.jpg", $l, $a)])
+                ->assertSessionHas('ok');
+
+            [$largura, $altura] = getimagesizefromstring(Storage::disk('local')->get($this->cliente->fresh()->foto));
+            $this->assertSame($esperado, [$largura, $altura], "Foto {$nome}");
+        }
+    }
+
+    public function test_foto_do_perfil_abre_ampliada_e_os_avatares_continuam_como_eram(): void
+    {
+        // Sem foto não há o que ampliar: o avatar do perfil não é um botão.
+        $this->actingAs($this->cliente)->get(route('conta.edit'))
+            ->assertOk()
+            ->assertDontSee('Ampliar a foto de perfil')
+            ->assertSee('<span class="avatar avatar-g" data-foto-previa>IM</span>', false);
+
+        $this->actingAs($this->cliente)
+            ->post(route('conta.foto.salvar'), ['foto' => UploadedFile::fake()->image('eu.jpg', 1200, 500)]);
+        $url = e($this->cliente->fresh()->fotoUrl());
+
+        $html = $this->actingAs($this->cliente)->get(route('conta.edit'))->assertOk()->getContent();
+
+        // No perfil, a foto vira um botão que abre a janela com a imagem inteira.
+        $this->assertMatchesRegularExpression(
+            '/<button type="button" class="avatar avatar-g" data-foto-previa[^>]*aria-label="Ampliar a foto de perfil">'
+            . '<img src="' . preg_quote($url, '/') . '" alt=""><\/button>/s',
+            $html
+        );
+        $this->assertStringContainsString('id="modal-foto"', $html);
+        $this->assertStringContainsString('data-foto-ampliada', $html);
+        $this->assertMatchesRegularExpression('/<div class="modal modal-foto".*?data-fecha aria-label="Fechar"/s', $html);
+
+        // Barra lateral e topo do celular: o mesmo avatar de antes, que leva a Minha conta.
+        $this->assertStringContainsString('<span class="avatar"><img src="' . $url . '" alt=""></span>', $html);
+        $this->assertMatchesRegularExpression(
+            '/<a href="' . preg_quote(route('conta.edit'), '/') . '" class="avatar"[^>]*><img src="' . preg_quote($url, '/') . '" alt=""><\/a>/s',
+            $html
+        );
     }
 
     public function test_a_foto_continua_depois_de_sair_e_entrar_de_novo(): void
