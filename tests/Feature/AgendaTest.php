@@ -100,7 +100,19 @@ class AgendaTest extends TestCase
         $this->actingAs($this->adm)->get(route('agenda.index', ['visao' => 'dia', 'data' => '2026-11-25']))
             ->assertOk()->assertSee('Quarta-feira, 25 de novembro de 2026')->assertSee('Treinamento do painel');
 
-        // Data inválida no endereço volta para hoje, sem erro.
+        // Semana com os sete dias e a grade com as 24 horas.
+        $this->evento(['tipo' => 'compromisso', 'titulo' => 'Plantão de domingo', 'data' => '2026-11-29', 'hora_inicio' => '22:00', 'hora_fim' => '23:00']);
+        $semana = $this->actingAs($this->adm)->get(route('agenda.index', ['visao' => 'semana-completa', 'data' => '2026-11-25']))
+            ->assertOk()->assertSee('23–29 de novembro de 2026')->assertSee('Plantão de domingo')->assertSee('Domingo');
+        $this->assertSame(7, substr_count($semana->getContent(), 'class="ag-coluna'));
+        $this->assertStringContainsString('>00:00</span>', $semana->getContent());
+        $this->assertStringContainsString('>23:00</span>', $semana->getContent());
+        // Na semana de trabalho, a grade do computador vai de segunda a sexta (a lista do celular segue com os sete dias).
+        $trabalho = $this->actingAs($this->adm)->get(route('agenda.index', ['visao' => 'semana', 'data' => '2026-11-25']))
+            ->assertSee('23–27 de novembro de 2026');
+        $this->assertSame(5, substr_count($trabalho->getContent(), 'class="ag-coluna'));
+
+                // Data inválida no endereço volta para hoje, sem erro.
         $this->actingAs($this->adm)->get(route('agenda.index', ['data' => '2026-02-31', 'visao' => 'x']))
             ->assertOk()->assertSee('09–13 de novembro de 2026');
     }

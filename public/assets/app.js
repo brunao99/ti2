@@ -580,6 +580,11 @@
     });
   }
 
+  // ---- grade de 24 horas: abre no horário útil (ou perto da hora atual) ------
+  document.querySelectorAll("[data-ag-rolagem]").forEach(function (area) {
+    area.scrollTop = parseInt(area.getAttribute("data-rolar-para"), 10) || 0;
+  });
+
   // ---- período: o seletor de data leva direto ao dia escolhido -------------
   document.addEventListener("change", function (e) {
     var ir = e.target.closest("[data-ir-para]");

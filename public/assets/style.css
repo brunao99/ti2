@@ -1132,6 +1132,13 @@ a.ag-tipo-item:hover,a.ag-tipo-item:focus-visible{background:var(--surface);text
 /* Grade (Dia e Semana de trabalho) */
 .ag-grade{--ag-rot:64px}
 .ag-cab,.ag-diatodo{display:grid;grid-template-columns:var(--ag-rot) repeat(var(--ag-colunas),minmax(0,1fr))}
+/* A grade tem as 24 horas e rola dentro desta área, com a barra na lateral. */
+.ag-rolagem{height:calc(100vh - 168px);height:calc(100dvh - 168px);min-height:420px;overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior:contain;scrollbar-gutter:stable}
+.ag-rolagem:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
+.ag-topo-fixo{position:sticky;top:0;z-index:6;background:var(--bg)}
+.ag-cab-dia.fds,.ag-diatodo-dia.fds{background:var(--surface)}
+.ag-coluna.fds{background:rgba(127,140,155,.06)}
 .ag-cab-dia{padding:.7rem .9rem .6rem;border-left:1px solid var(--line);border-top:3px solid transparent}
 .ag-cab-dia b{display:block;font-family:var(--cond);font-size:2rem;line-height:1.05;font-weight:600}
 .ag-cab-dia span{color:var(--muted);font-size:.92rem}
@@ -1150,9 +1157,10 @@ a.ag-tipo-item:hover,a.ag-tipo-item:focus-visible{background:var(--surface);text
 a.ag-faixa-item:hover{text-decoration:none;filter:brightness(.97)}
 
 .ag-corpo-grade{position:relative;display:grid;grid-template-columns:var(--ag-rot) repeat(var(--ag-colunas),minmax(0,1fr));
-  background-image:linear-gradient(var(--line) 1px,transparent 1px);background-size:100% var(--ag-hora);margin-bottom:2rem}
+  background-image:linear-gradient(var(--line) 1px,transparent 1px);background-size:100% var(--ag-hora)}
 .ag-horas{position:relative}
 .ag-horas span{position:absolute;right:.55rem;transform:translateY(-.15rem);font-size:.75rem;color:var(--muted)}
+.ag-horas span:first-child{transform:translateY(.2rem)}
 .ag-coluna{position:relative;border-left:1px solid var(--line)}
 .ag-coluna.hoje{background:rgba(43,108,176,.035)}
 .ag-agora{position:absolute;left:0;right:0;height:2px;background:#c0392b;z-index:3}

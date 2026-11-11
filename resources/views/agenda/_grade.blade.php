@@ -1,14 +1,17 @@
-{{-- Grade de horários: Dia ou Semana de trabalho (computador). --}}
+{{-- Grade de horários (computador): Dia, Semana de trabalho ou Semana. As 24 horas, com rolagem. --}}
 @php
     use App\Support\DataPt;
     $hora = \App\Services\Agenda\TelaAgenda::ALTURA_HORA;
 @endphp
 <div class="ag-grade" style="--ag-hora: {{ $hora }}px; --ag-colunas: {{ count($grade['dias']) }}">
-
+ {{-- As 24 horas rolam dentro desta área; dias e faixa "dia todo" ficam presos no topo. --}}
+ <div class="ag-rolagem" data-ag-rolagem data-rolar-para="{{ $grade['rolarPara'] }}" tabindex="0"
+      aria-label="Grade de horários, de 00:00 às 24:00. Role para ver as outras horas.">
+  <div class="ag-topo-fixo">
   <div class="ag-cab">
     <span></span>
     @foreach ($grade['dias'] as $dia)
-      <div @class(['ag-cab-dia', 'hoje' => $dia['hoje']])>
+      <div @class(['ag-cab-dia', 'hoje' => $dia['hoje'], 'fds' => $dia['data']->isWeekend()])>
         <b>{{ $dia['data']->format('d') }}</b>
         <span>
           {{ DataPt::diaCompleto($dia['data']) }}@if ($dia['feriados']->contains(fn ($f) => $f->ehFeriado()))<em> · feriado</em>@elseif ($dia['feriados']->isNotEmpty())<em> · ponto facultativo</em>@endif
@@ -21,7 +24,7 @@
   <div class="ag-diatodo">
     <span class="ag-diatodo-rot">dia todo</span>
     @foreach ($grade['dias'] as $dia)
-      <div class="ag-diatodo-dia">
+      <div @class(['ag-diatodo-dia', 'fds' => $dia['data']->isWeekend()])>
         @foreach ($dia['feriados'] as $f)
           <span class="ag-faixa-item t-data t-feriado" title="{{ $f->descricaoNaAgenda() }}{{ $f->expediente ? ' · ' . $f->expediente : '' }}">
             @include('agenda._icone', ['nome' => 'bandeira'])<span>{{ $f->descricaoNaAgenda() }}</span>
@@ -37,6 +40,8 @@
     @endforeach
   </div>
 
+  </div>
+
   <div class="ag-corpo-grade" style="height: {{ $grade['altura'] }}px">
     <div class="ag-horas" aria-hidden="true">
       @foreach ($grade['horas'] as $h)
@@ -45,8 +50,8 @@
     </div>
 
     @foreach ($grade['dias'] as $dia)
-      <div @class(['ag-coluna', 'hoje' => $dia['hoje']]) aria-label="{{ DataPt::extenso($dia['data']) }}">
-        @if ($dia['hoje'] && $grade['agora'])
+      <div @class(['ag-coluna', 'hoje' => $dia['hoje'], 'fds' => $dia['data']->isWeekend()]) aria-label="{{ DataPt::extenso($dia['data']) }}">
+        @if ($dia['hoje'])
           <span class="ag-agora" style="top: {{ $grade['agora']['topo'] }}px" title="Agora, {{ $grade['agora']['hora'] }}"></span>
         @endif
 
@@ -73,4 +78,5 @@
       </div>
     @endforeach
   </div>
+ </div>
 </div>
