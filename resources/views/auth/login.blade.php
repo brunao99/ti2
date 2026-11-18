@@ -10,7 +10,7 @@
 <body>
 
 <header class="site-head">
-  <a class="brand" href="{{ route('login') }}">
+  <a class="brand" href="{{ route('inicio') }}">
     <span>
       <span class="brand-name">Algoritmos e Dados</span>
       <span class="brand-sub">consultoria</span>
@@ -18,7 +18,7 @@
     @include('layouts.logo')
   </a>
   <nav class="site-nav">
-    <a href="{{ route('login') }}" class="on">Home</a>
+    <a href="{{ route('inicio') }}">Início</a>
   </nav>
 </header>
 

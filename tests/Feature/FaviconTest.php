@@ -23,8 +23,8 @@ class FaviconTest extends TestCase
 
     public function test_primeira_tela_e_login_tem_favicon(): void
     {
-        // A raiz leva ao login: é a primeira tela de quem acessa o site.
-        $this->get('/')->assertRedirect(route('login'));
+        // A raiz é a página inicial pública; o login é a tela seguinte.
+        $this->assertFavicon($this->get('/')->assertOk()->getContent());
         $this->assertFavicon($this->get(route('login'))->assertOk()->getContent());
     }
 
