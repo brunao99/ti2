@@ -10,9 +10,10 @@ use Illuminate\View\View;
 
 class AuthController extends Controller
 {
+    /** O acesso ao painel fica na página inicial pública. */
     public function mostrarLogin(): View
     {
-        return view('auth.login');
+        return view('site.inicio');
     }
 
     public function entrar(Request $request): RedirectResponse
@@ -57,6 +58,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login');
+        return redirect()->route('inicio');
     }
 }
