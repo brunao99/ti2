@@ -25,3 +25,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Impeccable: rascunhos e estado local da skill de design
+/.impeccable/mocks/
+/.impeccable/questions/
