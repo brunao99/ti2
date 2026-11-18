@@ -13,7 +13,7 @@
     // modo: "foto" preenche o quadro; "marca" mostra a imagem inteira sobre fundo claro.
     $objetivos = [
         ['Identificação dos programas em execução nos ministérios e seleção daqueles sintonizados com o perfil e as demandas do município.',
-            [['ministerios.jpg', 'Esplanada dos Ministérios, em Brasília', 'foto']]],
+            [['congresso.jpg', 'Congresso Nacional, em Brasília', 'foto']]],
         ['Monitoramento e seleção dos editais publicados nos ministérios.',
             [['programas.jpg', 'Cartaz de edital publicado por ministério', 'marca']]],
         ['Identificação de fontes de financiamento para o município junto à CAIXA, ao BNDES e ao Banco do Brasil.',
@@ -21,19 +21,19 @@
         ['Monitoramento de programas e ações da administração direta e indireta do Governo do Estado de Minas Gerais.',
             [['minas-gerais.jpg', 'Cidade Administrativa do Governo de Minas Gerais', 'foto']]],
         ['Pesquisas que identificam boas práticas governamentais e projetos inovadores nas administrações municipais do país.',
-            [['noticia.jpg', 'Notícia sobre projeto inovador de um município', 'marca']]],
+            [['predio-publico.jpg', 'Prédio público histórico em cidade do interior do Brasil', 'foto']]],
         ['Identificação de parcerias com a iniciativa privada e o terceiro setor para eventos e projetos sociais.',
-            [['lei-incentivo.jpg', 'Lei de Incentivo à Cultura', 'foto'], ['esporte.jpg', 'Projeto esportivo apoiado por empresa', 'foto']]],
+            [['festival.jpg', 'Dançarina em festa cultural de rua', 'foto'], ['futebol.jpg', 'Crianças jogando futebol', 'foto']]],
         ['Monitoramento das mídias digitais de gestores municipais bem avaliados, identificando novos conteúdos e estilos de postagem.',
-            [['midias.jpg', 'Publicações de gestor municipal em rede social', 'foto']]],
+            [['celular.jpg', 'Celular com aplicativos de redes sociais', 'foto']]],
         ['Identificação de programas de entidades que premiam gestores públicos por iniciativas inovadoras.',
-            [['premio.jpg', 'Prêmio Mineiro de Boas Práticas na Gestão Municipal, da AMM', 'marca'], ['sebrae.jpg', 'Prêmio Sebrae Prefeito Empreendedor', 'marca']]],
+            [['trofeu.jpg', 'Troféu de premiação', 'foto']]],
         ['Monitoramento dos índices municipais e indicadores da gestão pública (IDH, IDEB, FGV), comparados aos municípios do entorno e às médias do estado e do país.',
-            [['grafico.jpg', 'Gráfico comparativo de indicadores', 'marca']]],
+            [['indicadores.svg', 'Gráfico ilustrativo: indicador do município comparado às médias da região e do estado', 'foto']]],
         ['Acompanhamento da agenda de seminários e eventos nacionais sobre eficiência e inovação na gestão pública.',
-            [['agenda.jpg', 'Cartaz de seminário sobre gestão pública', 'marca']]],
+            [['seminario.jpg', 'Plateia em auditório durante um seminário', 'foto']]],
         ['Monitoramento das pautas municipalistas, notas técnicas e boletins da Confederação Nacional de Municípios e da Associação Mineira de Municípios.',
-            [['cnm.jpg', 'Marca da Confederação Nacional de Municípios', 'marca'], ['amm.jpg', 'Marca da Associação Mineira de Municípios', 'marca']]],
+            [['reuniao.jpg', 'Reunião de trabalho', 'foto']]],
     ];
 @endphp
 <!DOCTYPE html>
@@ -47,7 +47,7 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Algoritmos e Dados — Consultoria em gestão pública para prefeituras">
 <meta property="og:description" content="Programas, editais e financiamentos para o seu município, em um painel com alertas no WhatsApp.">
-<meta property="og:image" content="{{ $foto('sabara-rua.jpg') }}">
+<meta property="og:image" content="{{ $foto('heroi-ouro-preto.jpg') }}">
 @include('layouts.favicon')
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -89,7 +89,7 @@
 
   {{-- ============================================== início, com o acesso ao painel --}}
   <section class="heroi" id="inicio" aria-labelledby="heroi-titulo">
-    <img class="heroi-fundo" src="{{ $foto('sabara-rua.jpg') }}" width="820" height="400" alt="" aria-hidden="true" fetchpriority="high">
+    <img class="heroi-fundo" src="{{ $foto('heroi-ouro-preto.jpg') }}" width="2000" height="1200" alt="" aria-hidden="true" fetchpriority="high">
 
     <div class="wrap heroi-grade">
       <div class="heroi-texto">
@@ -153,12 +153,12 @@
     </div>
   </section>
 
-  {{-- Fotos das cidades, como no banner do site atual. --}}
-  <ul class="faixa" aria-label="Fotos de Sabará (MG)">
-    <li><img src="{{ $foto('sabara-ruinas.jpg') }}" width="320" height="400" alt="Ruínas de igreja de pedra com escadaria e portão azul, em Sabará"></li>
-    <li><img src="{{ $foto('sabara-casario.jpg') }}" width="320" height="400" alt="Casarão colonial com janelas azuis e lampião, em Sabará"></li>
-    <li><img src="{{ $foto('sabara-praca.jpg') }}" width="320" height="400" alt="Praça com coreto e árvores, em Sabará"></li>
-    <li><img src="{{ $foto('sabara-igreja.jpg') }}" width="320" height="400" alt="Fachada barroca de igreja ao entardecer, em Sabará"></li>
+  {{-- Fotos de cidades históricas de Minas Gerais. --}}
+  <ul class="faixa" aria-label="Fotos de cidades históricas de Minas Gerais">
+    <li><img src="{{ $foto('faixa-ouro-preto-rosario.jpg') }}" width="900" height="750" loading="lazy" alt="Igreja barroca de Nossa Senhora do Rosário, em Ouro Preto (MG)"></li>
+    <li><img src="{{ $foto('faixa-sao-joao-del-rei-rua.jpg') }}" width="900" height="750" loading="lazy" alt="Rua de pedra com casarios coloniais, em São João del-Rei (MG)"></li>
+    <li><img src="{{ $foto('faixa-ouro-preto-casario.jpg') }}" width="900" height="750" loading="lazy" alt="Casario e igreja na encosta de uma cidade histórica de Minas Gerais"></li>
+    <li><img src="{{ $foto('faixa-sao-joao-del-rei-igreja.jpg') }}" width="900" height="750" loading="lazy" alt="Fachada barroca de igreja em São João del-Rei (MG)"></li>
   </ul>
 
   {{-- ========================================================= objetivos --}}
@@ -173,7 +173,13 @@
         </p>
       </div>
 
-      <ul class="objetivos">
+      <div class="carrossel" data-carrossel>
+        <div class="carrossel-controles">
+          <p class="carrossel-contagem" aria-live="polite" data-carrossel-contagem></p>
+          <button type="button" class="carrossel-botao" data-carrossel-anterior aria-label="Objetivos anteriores">@include('site._icone', ['nome' => 'esquerda'])</button>
+          <button type="button" class="carrossel-botao" data-carrossel-proximo aria-label="Próximos objetivos">@include('site._icone', ['nome' => 'direita'])</button>
+        </div>
+      <ul class="objetivos" data-carrossel-trilho tabindex="0" role="region" aria-roledescription="carrossel" aria-label="Objetivos (role para os lados)">
         @foreach ($objetivos as [$texto, $imagens])
           <li class="objetivo">
             <div @class(['objetivo-img', 'varias' => count($imagens) > 1, 'marcas' => $imagens[0][2] === 'marca'])>
@@ -192,6 +198,7 @@
           </a>
         </li>
       </ul>
+      </div>
     </div>
   </section>
 
@@ -283,7 +290,7 @@
         <p class="frase">É preciso ficar antenado para não deixar as oportunidades passarem.</p>
       </div>
       <figure class="sobre-foto">
-        <img src="{{ $foto('sabara-coreto.jpg') }}" width="750" height="400" loading="lazy" alt="Praça com coreto, árvores e casarios, em Sabará (MG)">
+        <img src="{{ $foto('sobre-tiradentes.jpg') }}" width="1400" height="747" loading="lazy" alt="Torres de igreja colonial em Tiradentes (MG)">
       </figure>
     </div>
   </section>
@@ -318,7 +325,7 @@
         <a href="#sobre">Sobre</a>
         <a href="{{ $usuario ? route('painel.inicio') : '#acesso' }}">{{ $usuario ? 'Abrir o painel' : 'Acessar o painel' }}</a>
       </nav>
-      <p class="rodape-legal">© {{ date('Y') }} Algoritmos e Dados · Consultoria à Gestão Pública e Empresarial</p>
+      <p class="rodape-legal">© {{ date('Y') }} Algoritmos e Dados · Consultoria à Gestão Pública e Empresarial · Fotos de cidades e de temas: Unsplash</p>
     </div>
   </div>
 </footer>

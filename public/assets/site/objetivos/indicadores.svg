@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Gráfico ilustrativo: indicador do município comparado à média da região e do estado">
+  <rect width="640" height="360" fill="#ffffff"/>
+  <g stroke="#e3e8ee" stroke-width="1">
+    <line x1="56" y1="60" x2="600" y2="60"/><line x1="56" y1="120" x2="600" y2="120"/>
+    <line x1="56" y1="180" x2="600" y2="180"/><line x1="56" y1="240" x2="600" y2="240"/>
+  </g>
+  <line x1="56" y1="300" x2="600" y2="300" stroke="#9fb0c2" stroke-width="1.5"/>
+  <g font-family="Arial, sans-serif" font-size="14" fill="#6b7a8a">
+    <text x="88" y="326">2019</text><text x="216" y="326">2021</text><text x="344" y="326">2023</text><text x="472" y="326">2025</text>
+  </g>
+  <g fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="104,250 232,230 360,200 488,150 584,110" stroke="#133049"/>
+    <polyline points="104,220 232,215 360,205 488,195 584,186" stroke="#d9a23a"/>
+    <polyline points="104,200 232,198 360,190 488,182 584,176" stroke="#7fa6d6"/>
+  </g>
+  <g fill="#133049"><circle cx="104" cy="250" r="6"/><circle cx="232" cy="230" r="6"/><circle cx="360" cy="200" r="6"/><circle cx="488" cy="150" r="6"/><circle cx="584" cy="110" r="7"/></g>
+  <g font-family="Arial, sans-serif" font-size="15">
+    <rect x="70" y="24" width="14" height="4" rx="2" fill="#133049"/><text x="92" y="31" fill="#16212d">Município</text>
+    <rect x="200" y="24" width="14" height="4" rx="2" fill="#d9a23a"/><text x="222" y="31" fill="#16212d">Média da região</text>
+    <rect x="370" y="24" width="14" height="4" rx="2" fill="#7fa6d6"/><text x="392" y="31" fill="#16212d">Média do estado</text>
+  </g>
+</svg>

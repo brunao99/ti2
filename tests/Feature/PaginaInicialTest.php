@@ -41,9 +41,9 @@ class PaginaInicialTest extends TestCase
         $objetivos = substr($html, strpos($html, 'id="objetivos"'), strpos($html, 'id="como-funciona"') - strpos($html, 'id="objetivos"'));
 
         $this->assertSame(11, substr_count($objetivos, '<li class="objetivo">'));
-        $this->assertStringContainsString('objetivos/ministerios.jpg', $objetivos);
+        $this->assertStringContainsString('objetivos/congresso.jpg', $objetivos);
         $this->assertStringContainsString('objetivos/caixa.jpg', $objetivos);
-        $this->assertStringContainsString('objetivos/cnm.jpg', $objetivos);
+        $this->assertStringContainsString('objetivos/indicadores.svg', $objetivos);
     }
 
     public function test_login_errado_volta_para_a_pagina_inicial_com_a_mensagem(): void
@@ -92,7 +92,7 @@ class PaginaInicialTest extends TestCase
     {
         $html = $this->get('/')->getContent();
 
-        preg_match_all('#assets/site/[a-z/-]+\.jpg#', $html, $fotos);
+        preg_match_all('#assets/site/[a-z/-]+\.(?:jpg|svg)#', $html, $fotos);
         $this->assertGreaterThan(15, count(array_unique($fotos[0])));
         foreach (array_unique($fotos[0]) as $foto) {
             $this->assertFileExists(public_path($foto));

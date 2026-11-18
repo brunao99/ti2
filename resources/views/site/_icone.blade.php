@@ -6,4 +6,10 @@
   @case('vistos')
     <svg class="icone" viewBox="0 0 18 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6.5 4.2 9.6 10.6 2.4"/><path d="M7.4 9.6 13.8 2.4"/><path d="M5.8 8 7.4 9.6"/></svg>
     @break
+  @case('esquerda')
+    <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+    @break
+  @case('direita')
+    <svg class="icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+    @break
 @endswitch
