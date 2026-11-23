@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Entrar — Painel Administrativo</title>
 @include('layouts.favicon')
+@include('layouts.social')
 <link rel="stylesheet" href="{{ \App\Support\Asset::url('assets/style.css') }}">
 </head>
 <body>
