@@ -48,6 +48,14 @@ return [
         'template_lang'   => env('WHATSAPP_TEMPLATE_LANG', 'pt_BR'),
     ],
 
+    // WhatsApp pelo Twilio (WHATSAPP_DRIVER=twilio), usado na demonstração
+    // com o sandbox. O número padrão é o do sandbox do Twilio.
+    'twilio' => [
+        'account_sid'   => env('TWILIO_ACCOUNT_SID'),
+        'auth_token'    => env('TWILIO_AUTH_TOKEN'),
+        'whatsapp_from' => env('TWILIO_WHATSAPP_FROM', 'whatsapp:+14155238886'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
