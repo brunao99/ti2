@@ -7,17 +7,21 @@ use Illuminate\Support\ServiceProvider;
 use App\Services\Alertas\AlertSender;
 use App\Services\Alertas\MetaWhatsAppSender;
 use App\Services\Alertas\SimulatedWhatsAppSender;
+use App\Services\Alertas\TwilioWhatsAppSender;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // WHATSAPP_DRIVER=meta envia de verdade; qualquer outro valor (o
-        // padrão é "simulado") mantém o envio simulado. Resolvido a cada uso,
-        // então trocar a variável não exige mexer em código.
-        $this->app->bind(AlertSender::class, fn ($app) => config('services.whatsapp.driver') === 'meta'
-            ? $app->make(MetaWhatsAppSender::class)
-            : $app->make(SimulatedWhatsAppSender::class));
+        // WHATSAPP_DRIVER=meta envia pela API oficial da Meta; twilio envia
+        // pelo WhatsApp do Twilio (sandbox de demonstração); qualquer outro
+        // valor (o padrão é "simulado") mantém o envio simulado. Resolvido a
+        // cada uso, então trocar a variável não exige mexer em código.
+        $this->app->bind(AlertSender::class, fn ($app) => match (config('services.whatsapp.driver')) {
+            'meta' => $app->make(MetaWhatsAppSender::class),
+            'twilio' => $app->make(TwilioWhatsAppSender::class),
+            default => $app->make(SimulatedWhatsAppSender::class),
+        });
     }
 
     public function boot(): void
