@@ -1,0 +1,135 @@
+/* Algoritmos e Dados — página inicial (landing page)
+   Marca do painel: azul-marinho, logo com a onda de wi-fi. Fotos: Sabará (MG)
+   e as imagens dos objetivos, ambas do site da empresa. */
+
+:root{
+  --marinho:#133049;
+  --marinho-fundo:#0e2438;
+  --azul:#1f4fa3;           /* o azul das janelas coloniais */
+  --ocre:#d9a23a;           /* fachadas e talha dourada */
+  --tinta:#16212d;
+  --apoio:#4f5d6c;
+  --linha:#d9dfe6;
+  --nevoa:#eef2f6;
+  --papel:#ffffff;
+  --sobre-escuro:#c3cfdc;   /* texto de apoio no fundo marinho */
+  --fonte:"Schibsted Grotesk",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --gut:80px;
+  --topo:72px;
+  --raio:8px;
+  --sai:cubic-bezier(.16,1,.3,1);
+  --sombra:0 1px 2px rgba(14,36,56,.06),0 8px 24px -12px rgba(14,36,56,.22);
+}
+@media (max-width:1279px){:root{--gut:48px}}
+@media (max-width:639px){:root{--gut:20px;--topo:64px}}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:calc(var(--topo) + 16px);scrollbar-color:#9fb0c2 var(--papel)}
+body.site{font-family:var(--fonte);font-size:16px;line-height:1.625;color:var(--tinta);background:var(--papel);
+  text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+img{display:block;max-width:100%;height:auto}
+a{color:inherit}
+ul,ol{list-style:none}
+button{font:inherit;color:inherit}
+::selection{background:#cbdaf2;color:var(--tinta)}
+.heroi ::selection,.secao-marinho ::selection,.fechamento ::selection{background:var(--ocre);color:var(--marinho-fundo)}
+.acesso ::selection{background:#cbdaf2;color:var(--tinta)}
+:focus-visible{outline:2px solid var(--azul);outline-offset:3px;border-radius:2px}
+.heroi :focus-visible,.secao-marinho :focus-visible,.fechamento :focus-visible,.objetivo-chamada :focus-visible{outline-color:#fff}
+.acesso :focus-visible{outline-color:var(--azul)}
+
+.wrap{width:min(100% - 2*var(--gut),1280px);margin-inline:auto}
+
+/* ------------------------------------------------------------ tipografia */
+h1,h2,h3{font-weight:500;color:inherit;text-wrap:balance}
+h1{font-size:clamp(2.25rem,1.1rem + 3.6vw,4rem);line-height:1.03;letter-spacing:-.035em}
+h2{font-size:clamp(1.875rem,1.2rem + 2.2vw,3rem);line-height:1.08;letter-spacing:-.03em}
+h3{font-size:1.25rem;line-height:1.3;letter-spacing:-.01em}
+.lide{font-size:clamp(1.0625rem,1rem + .3vw,1.25rem);line-height:1.55;color:var(--apoio);max-width:64ch;text-wrap:pretty}
+
+/* --------------------------------------------------------------- pular */
+.pular{position:absolute;left:var(--gut);top:-100px;z-index:60;background:var(--marinho);color:#fff;
+  padding:.75rem 1.1rem;border-radius:var(--raio);text-decoration:none;font-weight:500}
+.pular:focus{top:12px}
+
+/* --------------------------------------------------------------- botões */
+.acoes{display:flex;flex-wrap:wrap;gap:12px}
+.botao{display:inline-flex;align-items:center;justify-content:center;gap:.6rem;min-height:48px;padding:0 1.35rem;
+  border-radius:var(--raio);border:1px solid transparent;font:500 1rem/1 var(--fonte);text-decoration:none;
+  cursor:pointer;transition:transform .2s var(--sai),background-color .2s,border-color .2s,color .2s,box-shadow .2s}
+.botao:hover{transform:translateY(-1px)}
+.botao:active{transform:translateY(0) scale(.98)}
+.botao .icone{width:20px;height:20px;flex:none}
+.botao-pequeno{min-height:40px;padding:0 1rem;font-size:.9375rem}
+.botao-pequeno .icone{width:18px;height:18px}
+.botao-bloco{width:100%}
+.botao-cheio{background:var(--marinho);color:#fff;box-shadow:0 1px 2px rgba(19,48,73,.18),0 6px 16px -8px rgba(19,48,73,.45)}
+.botao-cheio:hover{background:#1b4266}
+.botao-claro{background:#fff;color:var(--marinho);box-shadow:0 6px 16px -8px rgba(0,0,0,.4)}
+.botao-claro:hover{background:#e8eef6}
+.botao-linha-clara{border-color:rgba(255,255,255,.5);color:#fff}
+.botao-linha-clara:hover{border-color:#fff;background:rgba(255,255,255,.1)}
+.link-botao{background:none;border:0;padding:.4rem 0;color:var(--azul);font-weight:500;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+
+/* ---------------------------------------------------------------- topo */
+.topo{position:fixed;inset:0 0 auto;z-index:50;height:var(--topo);background:rgba(255,255,255,.97);
+  border-bottom:1px solid transparent;transition:border-color .2s,box-shadow .2s}
+.topo.rolou{border-bottom-color:var(--linha);box-shadow:0 6px 18px -14px rgba(14,36,56,.4)}
+.topo-in{height:100%;display:flex;align-items:center;gap:2rem}
+.marca{display:inline-flex;align-items:center;gap:.5rem;color:var(--marinho);text-decoration:none;flex:none}
+.marca-nome{font-size:1.25rem;font-weight:500;letter-spacing:-.02em;line-height:1}
+.marca .wifi{width:26px;height:20px;color:var(--azul);transform:translateY(-3px)}
+.marca-clara{color:#fff}
+.marca-clara .wifi{color:var(--ocre)}
+.menu{display:flex;align-items:center;gap:1.75rem;margin-left:auto}
+.menu a{font-size:.9375rem;color:var(--tinta);text-decoration:none;background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;
+  padding:.35rem 0;transition:background-size .25s var(--sai)}
+.menu a:hover{background-size:100% 1px}
+.menu .menu-acesso{color:var(--azul);font-weight:500}
+.menu-botao{display:none}
+
+/* ---------------------------------------------------------------- seções */
+.secao{position:relative;padding:112px 0}
+.secao-nevoa{background:var(--nevoa)}
+.secao-marinho{background:var(--marinho);color:#fff}
+.secao-marinho .lide{color:var(--sobre-escuro)}
+.cabeca{margin-bottom:56px}
+.cabeca .lide{margin-top:1.25rem}
+
+/* [PARTE 2 - Victor] primeira tela, acesso ao painel e faixa de fotos */
+
+/* [PARTE 3 - Gabriel] objetivos em carrossel */
+
+/* [PARTE 4 - Lucas] como funciona, sobre, contato e rodapé */
+
+/* --------------------------------------------- celular: topo e menu */
+@media (max-width:860px){
+  .menu-botao{display:inline-flex;align-items:center;gap:.6rem;margin-left:auto;min-height:44px;padding:0 .25rem;
+    background:none;border:0;font:500 1rem/1 var(--fonte);color:var(--marinho);cursor:pointer}
+  .menu-botao-icone{position:relative;width:20px;height:12px}
+  .menu-botao-icone i{position:absolute;left:0;right:0;height:2px;background:currentColor;border-radius:2px;transition:transform .25s var(--sai),top .25s var(--sai)}
+  .menu-botao-icone i:first-child{top:0}
+  .menu-botao-icone i:last-child{top:10px}
+  .menu-botao[aria-expanded="true"] .menu-botao-icone i:first-child{top:5px;transform:rotate(45deg)}
+  .menu-botao[aria-expanded="true"] .menu-botao-icone i:last-child{top:5px;transform:rotate(-45deg)}
+  .topo-whats{display:none}
+  .menu{position:fixed;inset:var(--topo) 0 0;margin:0;background:#fff;flex-direction:column;align-items:stretch;gap:0;
+    padding:16px var(--gut) 32px;visibility:hidden;opacity:0;transform:translateY(-8px);
+    transition:opacity .2s,transform .3s var(--sai),visibility 0s .3s}
+  .menu.aberto{visibility:visible;opacity:1;transform:none;transition:opacity .2s,transform .3s var(--sai)}
+  .menu a{font-size:1.5rem;padding:1rem 0;border-bottom:1px solid var(--linha);background:none}
+  .menu .menu-acesso{display:flex;justify-content:center;margin-top:1.5rem;border:1px solid var(--marinho);border-radius:var(--raio);
+    font-size:1rem;color:var(--marinho);min-height:48px;align-items:center}
+  body.menu-aberto{overflow:hidden}
+}
+@media (max-width:639px){
+  .secao{padding:80px 0}
+  .acoes{flex-direction:column}
+  .acoes .botao{width:100%}
+  .cabeca{margin-bottom:40px}
+  .topo-in{gap:1rem}
+}
+@media (max-width:359px){
+  .marca-nome{font-size:1.0625rem}
+  .menu-botao-texto{display:none}
+}
