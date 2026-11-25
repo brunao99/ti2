@@ -45,8 +45,9 @@ class DisparaAlerta
 
         $mensagem = self::montarMensagem($modelo->mensagem, $postagem);
         $parametros = self::parametrosTemplate($postagem);
+        $imagem = ImagemAlerta::url($postagem);
 
-        return DB::transaction(function () use ($postagem, $modelo, $autor, $usuarios, $aptos, $mensagem, $parametros) {
+        return DB::transaction(function () use ($postagem, $modelo, $autor, $usuarios, $aptos, $mensagem, $parametros, $imagem) {
             $disparo = AlertDispatch::create([
                 'postagem_id' => $postagem->id,
                 'alert_template_id' => $modelo->id,
@@ -75,7 +76,7 @@ class DisparaAlerta
                     continue;
                 }
 
-                $resultado = $this->sender->send($usuario->telefone, $mensagem, $parametros);
+                $resultado = $this->sender->send($usuario->telefone, $mensagem, $parametros, $imagem);
 
                 if ($resultado['status'] === 'enviado') {
                     $enviados++;

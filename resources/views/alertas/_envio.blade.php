@@ -52,6 +52,18 @@
           <textarea class="inp-box envio-preview" id="mensagem_preview" rows="6" readonly
                     placeholder="Selecione um modelo para ver a mensagem."></textarea>
         </div>
+
+        @if (config('services.alertas.imagem'))
+          {{-- Com ALERTA_IMAGEM ligado, a mensagem acima vira a legenda desta imagem. --}}
+          <div style="margin-top:1rem">
+            <p class="label">Imagem que vai junto (a mensagem acima vira a legenda)</p>
+            <a href="{{ route('alertas.imagem.previa', $postagem) }}" target="_blank" rel="noopener">
+              <img src="{{ route('alertas.imagem.previa', $postagem) }}" width="180" height="320" loading="lazy"
+                   alt="Imagem do alerta: comunicado importante com o título e o resumo desta publicação"
+                   style="display:block;width:180px;height:auto;border:1px solid #d9dfe6;border-radius:8px">
+            </a>
+          </div>
+        @endif
       </div>
 
       <aside class="envio-destino">

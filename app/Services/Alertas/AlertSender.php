@@ -9,10 +9,12 @@ interface AlertSender
      *
      * $mensagem é o texto já montado (o que o histórico mostra). $parametros
      * são os valores do template da Meta, na ordem {{1}}, {{2}}, {{3}}:
-     * título, tipo e data da publicação.
+     * título, tipo e data da publicação. $imagem é o endereço público da
+     * imagem do alerta (ImagemAlerta), ou null quando vai só texto; quem
+     * não sabe mandar imagem ignora.
      *
      * @param  list<string>  $parametros
      * @return array{status: 'enviado'|'falha', resultado: string, wamid?: string, erro_codigo?: int|null, erro_mensagem?: string|null}
      */
-    public function send(string $telefone, string $mensagem, array $parametros = []): array;
+    public function send(string $telefone, string $mensagem, array $parametros = [], ?string $imagem = null): array;
 }

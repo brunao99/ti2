@@ -1,0 +1,8 @@
+Fontes usadas na imagem dos alertas de WhatsApp (App\Services\Alertas\ImagemAlerta).
+
+- Inter Tight (500, 700 e 800 itálico): título "COMUNICADO IMPORTANTE" e título da publicação.
+- Open Sans (400 e 700): texto do resumo.
+
+Ambas do Google Fonts, sob a SIL Open Font License 1.1 (OFL-InterTight.txt e
+OFL-OpenSans.txt). Ficam no projeto para a imagem sair igual em qualquer
+servidor, sem depender de fonte instalada.

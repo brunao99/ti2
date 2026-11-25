@@ -29,7 +29,7 @@ class MetaWhatsAppSender implements AlertSender
         132016 => 'Template desativado pela Meta.',
     ];
 
-    public function send(string $telefone, string $mensagem, array $parametros = []): array
+    public function send(string $telefone, string $mensagem, array $parametros = [], ?string $imagem = null): array
     {
         $cfg = config('services.whatsapp');
 

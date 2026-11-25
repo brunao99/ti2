@@ -30,7 +30,7 @@ class TwilioWhatsAppSender implements AlertSender
         63016 => 'Fora da janela de 24 horas: mande uma mensagem para o sandbox e tente de novo.',
     ];
 
-    public function send(string $telefone, string $mensagem, array $parametros = []): array
+    public function send(string $telefone, string $mensagem, array $parametros = [], ?string $imagem = null): array
     {
         $cfg = config('services.twilio');
         $faltando = array_keys(array_filter([
@@ -52,11 +52,13 @@ class TwilioWhatsAppSender implements AlertSender
                 ->asForm()
                 ->acceptJson()
                 ->timeout(15)
-                ->post($url, [
+                ->post($url, array_filter([
                     'From' => $this->enderecoWhatsApp($cfg['whatsapp_from']),
                     'To' => $this->enderecoWhatsApp($telefone),
                     'Body' => $mensagem,
-                ]);
+                    // Com imagem, o texto do alerta vira a legenda dela.
+                    'MediaUrl' => $imagem,
+                ]));
         } catch (ConnectionException $e) {
             Log::warning('WhatsApp (Twilio): sem conexão', ['erro' => $e->getMessage()]);
 

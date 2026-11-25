@@ -71,6 +71,23 @@
             <span class="mono" id="palavras">0 palavras</span>
           </div>
         </div>
+
+        {{-- Texto do centro da imagem do alerta. Começa com o padrão (o início do
+             texto da publicação) e acompanha o editor até a pessoa mexer nele.
+             Enviado vazio, fica gravado como "usar o padrão". --}}
+        @php($resumoProprio = old('resumo_alerta', $postagem->resumo_alerta))
+        <div class="field" style="margin-bottom:1.8rem">
+          <label class="label" for="resumo_alerta">Resumo para o alerta no WhatsApp</label>
+          <textarea class="inp-box" id="resumo_alerta" name="resumo_alerta" rows="5"
+                    maxlength="{{ \App\Support\ResumoAlerta::MAXIMO }}"
+                    data-auto="{{ filled($resumoProprio) ? '0' : '1' }}"
+                    placeholder="Escreva o texto da publicação: o resumo aparece aqui.">{{ filled($resumoProprio) ? $resumoProprio : \App\Support\ResumoAlerta::padrao(old('texto', $postagem->texto)) }}</textarea>
+          <p class="muted" style="font-size:.85rem;margin-top:.3rem">
+            Vai no centro da imagem enviada com o alerta. Já vem com o começo do texto da publicação; altere se quiser.
+            <button type="button" class="link-botao" id="resumo_padrao" @if (! filled($resumoProprio)) hidden @endif
+                    style="background:none;border:0;padding:0;color:inherit;text-decoration:underline;cursor:pointer">Voltar ao padrão</button>
+          </p>
+        </div>
       </div>
 
       <aside class="aside">
@@ -128,6 +145,65 @@
 
     tipo.addEventListener('change', aplicar);
     aplicar();
+  })();
+</script>
+<script>
+  // Resumo do alerta: segue o texto da publicação enquanto não for editado.
+  // Mesma regra de App\Support\ResumoAlerta::padrao (até 450 caracteres,
+  // cortando no fim de uma frase).
+  (function () {
+    var resumo = document.getElementById('resumo_alerta');
+    var campo = document.getElementById('texto');
+    var caixa = document.getElementById('editor-caixa');
+    var voltar = document.getElementById('resumo_padrao');
+    if (!resumo || !campo || !caixa) return;
+    var LIMITE = {{ \App\Support\ResumoAlerta::LIMITE }};
+
+    function textoPuro() {
+      var d = document.createElement('div');
+      d.innerHTML = (campo.value || '').replace(/<(br|\/p|\/div|\/li|\/h[1-6])\b[^>]*>/gi, ' ');
+      return (d.textContent || '').replace(/\s+/g, ' ').trim();
+    }
+
+    function padrao() {
+      var texto = textoPuro();
+      if (texto.length <= LIMITE) return texto;
+      var frases = texto.split(/(?<=[.!?])\s+/), saida = '';
+      for (var i = 0; i < frases.length; i++) {
+        var tentativa = saida ? saida + ' ' + frases[i] : frases[i];
+        if (tentativa.length > LIMITE) break;
+        saida = tentativa;
+      }
+      if (saida) return saida;
+      var corte = texto.slice(0, LIMITE), espaco = corte.lastIndexOf(' ');
+      return (espaco > 0 ? corte.slice(0, espaco) : corte).replace(/[\s,;:\-–]+$/, '') + '…';
+    }
+
+    function atualizar() {
+      if (resumo.dataset.auto === '1') resumo.value = padrao();
+    }
+
+    // O editor copia o conteúdo para o textarea do texto no próprio evento;
+    // o setTimeout lê depois dessa cópia.
+    caixa.addEventListener('input', function () { setTimeout(atualizar, 0); });
+    caixa.addEventListener('keyup', function () { setTimeout(atualizar, 0); });
+
+    resumo.addEventListener('input', function () {
+      resumo.dataset.auto = '0';
+      if (voltar) voltar.hidden = false;
+    });
+
+    if (voltar) voltar.addEventListener('click', function () {
+      resumo.dataset.auto = '1';
+      voltar.hidden = true;
+      atualizar();
+    });
+
+    // Sem edição, vai vazio: o servidor guarda "usar o padrão" e recalcula
+    // o resumo se o texto da publicação mudar depois.
+    resumo.form.addEventListener('submit', function () {
+      if (resumo.dataset.auto === '1') resumo.value = '';
+    });
   })();
 </script>
 <script src="{{ \App\Support\Asset::url('assets/editor.js') }}"></script>
