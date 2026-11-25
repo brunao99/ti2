@@ -33,9 +33,9 @@ Route::get('/webhook/whatsapp', [WhatsAppWebhookController::class, 'verificar'])
 Route::post('/webhook/whatsapp', [WhatsAppWebhookController::class, 'receber'])->name('webhook.whatsapp.receber');
 
 // Imagem do alerta para o provedor de WhatsApp baixar: sem login, mas só com
-// o endereço assinado e com prazo que o próprio sistema gera no envio.
-Route::get('/alertas/imagem/{postagem}', [AlertaController::class, 'imagem'])
-    ->middleware('signed')
+// o código de acesso que o próprio sistema gera no envio (ImagemAlerta::token).
+Route::get('/alertas/imagem/{postagem}/{token}.png', [AlertaController::class, 'imagemPublica'])
+    ->where(['postagem' => '[0-9]+', 'token' => '[a-f0-9]{32}'])
     ->name('alertas.imagem');
 
 // ------------------------------------------------------------------- público

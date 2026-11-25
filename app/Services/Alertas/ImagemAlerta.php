@@ -3,7 +3,6 @@
 namespace App\Services\Alertas;
 
 use App\Models\Postagem;
-use Illuminate\Support\Facades\URL;
 
 /**
  * Imagem do alerta de WhatsApp, no formato de story (900 × 1600):
@@ -23,17 +22,29 @@ class ImagemAlerta
     private const MESES = 'janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro';
 
     /**
-     * Endereço público e assinado da imagem, que o provedor de WhatsApp
-     * baixa na hora do envio. Null quando o envio com imagem está desligado
-     * (ALERTA_IMAGEM).
+     * Endereço público da imagem, que o provedor de WhatsApp baixa na hora
+     * do envio. Null quando o envio com imagem está desligado (ALERTA_IMAGEM).
      */
     public static function url(Postagem $postagem): ?string
     {
-        if (! config('services.alertas.imagem')) {
-            return null;
-        }
+        return config('services.alertas.imagem') ? url(self::caminho($postagem)) : null;
+    }
 
-        return URL::temporarySignedRoute('alertas.imagem', now()->addDays(7), ['postagem' => $postagem->id]);
+    /**
+     * Caminho da imagem sem o domínio, com o código de acesso no próprio
+     * caminho (nada de "?..."): o modelo de mensagem do Twilio monta o
+     * endereço como https://<domínio>/{{4}}, e o mesmo caminho vale em
+     * qualquer domínio do sistema.
+     */
+    public static function caminho(Postagem $postagem): string
+    {
+        return ltrim(route('alertas.imagem', ['postagem' => $postagem->id, 'token' => self::token($postagem)], false), '/');
+    }
+
+    /** Código de acesso da imagem desta publicação, derivado da APP_KEY. */
+    public static function token(Postagem $postagem): string
+    {
+        return substr(hash_hmac('sha256', 'alerta-imagem:' . $postagem->id, (string) config('app.key')), 0, 32);
     }
 
     /** PNG da imagem do alerta desta publicação. */

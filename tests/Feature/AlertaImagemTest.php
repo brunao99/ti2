@@ -10,7 +10,6 @@ use App\Support\ResumoAlerta;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class AlertaImagemTest extends TestCase
@@ -70,19 +69,18 @@ class AlertaImagemTest extends TestCase
 
     // ------------------------------------------------------------------ imagem
 
-    public function test_imagem_sem_assinatura_e_recusada(): void
+    public function test_imagem_com_codigo_errado_e_recusada(): void
     {
         $postagem = $this->postagem(User::factory()->create(['perfil' => User::ADM]));
 
-        $this->get(route('alertas.imagem', $postagem))->assertForbidden();
+        $this->get('/alertas/imagem/' . $postagem->id . '/' . str_repeat('0', 32) . '.png')->assertForbidden();
     }
 
-    public function test_imagem_assinada_e_um_png_no_formato_de_story(): void
+    public function test_imagem_com_o_codigo_certo_e_um_png_no_formato_de_story(): void
     {
         $postagem = $this->postagem(User::factory()->create(['perfil' => User::ADM]));
-        $url = URL::temporarySignedRoute('alertas.imagem', now()->addHour(), ['postagem' => $postagem->id]);
 
-        $resposta = $this->get($url)->assertOk()->assertHeader('Content-Type', 'image/png');
+        $resposta = $this->get('/' . ImagemAlerta::caminho($postagem))->assertOk()->assertHeader('Content-Type', 'image/png');
 
         [$largura, $altura] = getimagesizefromstring($resposta->getContent());
         $this->assertSame([900, 1600], [$largura, $altura]);
@@ -103,7 +101,9 @@ class AlertaImagemTest extends TestCase
         $this->assertNull(ImagemAlerta::url($postagem));
 
         config(['services.alertas.imagem' => true]);
-        $this->assertStringContainsString('signature=', ImagemAlerta::url($postagem));
+        $url = ImagemAlerta::url($postagem);
+        $this->assertStringContainsString('/alertas/imagem/' . $postagem->id . '/' . ImagemAlerta::token($postagem) . '.png', $url);
+        $this->assertStringNotContainsString('?', $url);
     }
 
     // ------------------------------------------------------------ envio Twilio
@@ -116,8 +116,7 @@ class AlertaImagemTest extends TestCase
 
         Http::assertSent(fn (HttpRequest $req) => $req['To'] === 'whatsapp:+' . $usuario->telefone
             && $req['Body'] === 'Aviso: Edital de teste'
-            && str_contains($req['MediaUrl'] ?? '', '/alertas/imagem/' . $postagem->id)
-            && str_contains($req['MediaUrl'] ?? '', 'signature='));
+            && str_ends_with($req['MediaUrl'] ?? '', ImagemAlerta::caminho($postagem)));
     }
 
     public function test_twilio_sem_alerta_imagem_manda_so_o_texto(): void
@@ -127,6 +126,45 @@ class AlertaImagemTest extends TestCase
         $this->disparar();
 
         Http::assertSent(fn (HttpRequest $req) => $req['Body'] === 'Aviso: Edital de teste' && ! isset($req['MediaUrl']));
+    }
+
+    public function test_twilio_com_modelo_manda_o_content_sid_e_as_variaveis(): void
+    {
+        $this->configurarTwilio(imagem: false);
+        config(['services.twilio.content_sid' => 'HXtexto']);
+        User::factory()->recebeAlertas()->create();
+        $postagem = $this->disparar();
+
+        Http::assertSent(fn (HttpRequest $req) => $req['ContentSid'] === 'HXtexto'
+            && ! isset($req['Body'])
+            && json_decode($req['ContentVariables'], true) === [
+                '1' => 'Edital de teste',
+                '2' => $postagem->rotuloTipo(),
+                '3' => '25/11/2026',
+            ]);
+    }
+
+    public function test_twilio_com_modelo_de_imagem_manda_o_caminho_da_imagem_na_variavel_4(): void
+    {
+        $this->configurarTwilio(imagem: true);
+        config(['services.twilio.content_sid' => 'HXtexto', 'services.twilio.content_sid_imagem' => 'HXimagem']);
+        User::factory()->recebeAlertas()->create();
+        $postagem = $this->disparar();
+
+        Http::assertSent(fn (HttpRequest $req) => $req['ContentSid'] === 'HXimagem'
+            && ! isset($req['MediaUrl'])
+            && json_decode($req['ContentVariables'], true)['4'] === ImagemAlerta::caminho($postagem));
+    }
+
+    public function test_modelo_de_imagem_sem_alerta_imagem_usa_o_modelo_de_texto(): void
+    {
+        $this->configurarTwilio(imagem: false);
+        config(['services.twilio.content_sid' => 'HXtexto', 'services.twilio.content_sid_imagem' => 'HXimagem']);
+        User::factory()->recebeAlertas()->create();
+        $this->disparar();
+
+        Http::assertSent(fn (HttpRequest $req) => $req['ContentSid'] === 'HXtexto'
+            && ! isset(json_decode($req['ContentVariables'], true)['4']));
     }
 
     // ------------------------------------------------------------------- apoio
@@ -139,6 +177,8 @@ class AlertaImagemTest extends TestCase
             'services.twilio.auth_token' => 'token-de-teste',
             'services.twilio.whatsapp_from' => 'whatsapp:+17372508034',
             'services.alertas.imagem' => $imagem,
+            'services.twilio.content_sid' => null,
+            'services.twilio.content_sid_imagem' => null,
         ]);
         User::query()->update(['telefone' => null, 'alerta_consentimento_em' => null]);
         Http::fake(['api.twilio.com/*' => Http::response(['sid' => 'SM123', 'status' => 'queued'], 201)]);
