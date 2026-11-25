@@ -189,7 +189,7 @@ class ReenvioAlertaTest extends TestCase
         $this->app->instance(AlertSender::class, new class($falhamPara, $enviadosPara) implements AlertSender {
             public function __construct(private array $falhamPara, private \ArrayObject $log) {}
 
-            public function send(string $telefone, string $mensagem, array $parametros = []): array
+            public function send(string $telefone, string $mensagem, array $parametros = [], ?string $imagem = null): array
             {
                 $this->log[] = $telefone;
 

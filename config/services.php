@@ -32,6 +32,9 @@ return [
     // faz parte dos envios falhar de propósito, para testar o reenvio.
     'alertas' => [
         'simulacao_falha' => (int) env('ALERTA_SIMULACAO_FALHA', 0),
+        // Manda junto a imagem "Comunicado importante" (ImagemAlerta), com o
+        // texto do alerta como legenda. Hoje só o envio pelo Twilio usa.
+        'imagem' => (bool) env('ALERTA_IMAGEM', false),
     ],
 
     // WhatsApp Cloud API (Meta). Com o driver "simulado" (padrão) nada sai

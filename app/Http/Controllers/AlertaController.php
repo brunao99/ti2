@@ -9,8 +9,10 @@ use App\Models\Postagem;
 use App\Models\User;
 use App\Services\Alertas\AlertSender;
 use App\Services\Alertas\DisparaAlerta;
+use App\Services\Alertas\ImagemAlerta;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
@@ -60,6 +62,7 @@ class AlertaController extends Controller
 
             $pendentes = $disparo->destinatarios()->where('status', 'falha')->with('usuario')->get();
             $parametros = DisparaAlerta::parametrosTemplate($disparo->postagem);
+            $imagem = ImagemAlerta::url($disparo->postagem);
             $enviados = 0;
             $falhas = 0;
 
@@ -74,7 +77,7 @@ class AlertaController extends Controller
                     continue;
                 }
 
-                $resultado = $sender->send($usuario->telefone, $disparo->mensagem, $parametros);
+                $resultado = $sender->send($usuario->telefone, $disparo->mensagem, $parametros, $imagem);
                 $resultado['status'] === 'enviado' ? $enviados++ : $falhas++;
 
                 // Nova tentativa, novo wamid: os eventos do envio anterior
@@ -190,5 +193,17 @@ class AlertaController extends Controller
         $disparo->load(['postagem', 'modelo', 'administrador', 'destinatarios']);
 
         return view('alertas.show', compact('disparo'));
+    }
+
+    /**
+     * Imagem do alerta desta publicação. Serve a prévia do painel (com login)
+     * e o endereço assinado que o provedor de WhatsApp baixa na hora do envio.
+     */
+    public function imagem(Postagem $postagem, ImagemAlerta $imagem): Response
+    {
+        return response($imagem->gerar($postagem), 200, [
+            'Content-Type' => 'image/png',
+            'Cache-Control' => 'private, max-age=300',
+        ]);
     }
 }

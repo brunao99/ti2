@@ -211,6 +211,7 @@ class PostagemController extends Controller
             'tipo'            => ['required', Rule::in(Postagem::tiposValidos())],
             'titulo'          => ['required', 'string', 'max:255'],
             'texto'           => ['nullable', 'string', 'max:200000'],
+            'resumo_alerta'   => ['nullable', 'string', 'max:' . \App\Support\ResumoAlerta::MAXIMO],
             'data_publicacao' => ['required', 'date'],
             'mes_referencia'  => ['required', 'regex:/^\d{4}-\d{2}$/'],
             'situacao'        => ['required', 'in:rascunho,publicado'],
@@ -222,12 +223,17 @@ class PostagemController extends Controller
             'texto.max'                => 'O texto da publicação ficou longo demais.',
             'link.url'                 => 'Informe um link válido, por exemplo https://www.gov.br/...',
             'link.max'                 => 'O link ficou longo demais.',
+            'resumo_alerta.max'        => 'O resumo do alerta pode ter até ' . \App\Support\ResumoAlerta::MAXIMO . ' caracteres.',
         ]);
 
         // O texto chega como HTML do editor. Gravar cru abriria XSS para quem
         // montasse o POST na mão, então a limpeza é feita aqui — na entrada,
         // não na exibição, para que o banco só guarde conteúdo já confiável.
         $dados['texto'] = SanitizadorHtml::limpar($dados['texto'] ?? '');
+
+        // Resumo do alerta em texto puro. Vazio volta a ser "usar o padrão".
+        $resumo = trim(preg_replace('/\s+/u', ' ', strip_tags((string) ($dados['resumo_alerta'] ?? ''))));
+        $dados['resumo_alerta'] = $resumo !== '' ? $resumo : null;
 
         return $dados;
     }

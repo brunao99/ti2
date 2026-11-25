@@ -13,9 +13,46 @@
     window.addEventListener('scroll', marcar, { passive: true });
   }
 
-  // [PARTE 2 - Victor] mostrar ou esconder a senha
+  // Mostrar ou esconder a senha no acesso ao painel.
+  var verSenha = document.querySelector('[data-ver-senha]');
+  if (verSenha) {
+    verSenha.addEventListener('click', function () {
+      var campo = document.getElementById(verSenha.getAttribute('aria-controls'));
+      var mostrar = campo.type === 'password';
+      campo.type = mostrar ? 'text' : 'password';
+      verSenha.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+      verSenha.setAttribute('aria-pressed', mostrar ? 'true' : 'false');
+      campo.focus();
+    });
+  }
 
-  // [PARTE 3 - Gabriel] carrossel dos objetivos
+  // Carrossel dos objetivos: setas andam um cartão; a contagem mostra o trecho visível.
+  var carrossel = document.querySelector('[data-carrossel]');
+  if (carrossel) {
+    var trilho = carrossel.querySelector('[data-carrossel-trilho]');
+    var anterior = carrossel.querySelector('[data-carrossel-anterior]');
+    var proximo = carrossel.querySelector('[data-carrossel-proximo]');
+    var contagem = carrossel.querySelector('[data-carrossel-contagem]');
+    var cartoes = trilho.children;
+    var passo = function () {
+      return cartoes.length > 1 ? cartoes[1].offsetLeft - cartoes[0].offsetLeft : trilho.clientWidth;
+    };
+    var atualizar = function () {
+      var p = passo();
+      var primeiro = Math.round(trilho.scrollLeft / p);
+      var visiveis = Math.max(1, Math.round((trilho.clientWidth + 24) / p));
+      var ultimo = Math.min(cartoes.length, primeiro + visiveis);
+      anterior.disabled = trilho.scrollLeft <= 2;
+      proximo.disabled = trilho.scrollLeft + trilho.clientWidth >= trilho.scrollWidth - 2;
+      contagem.textContent = (primeiro + 1) + (ultimo > primeiro + 1 ? '–' + ultimo : '') + ' de ' + cartoes.length;
+    };
+    var suave = function () { return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'; };
+    anterior.addEventListener('click', function () { trilho.scrollBy({ left: -passo(), behavior: suave() }); });
+    proximo.addEventListener('click', function () { trilho.scrollBy({ left: passo(), behavior: suave() }); });
+    trilho.addEventListener('scroll', function () { window.requestAnimationFrame(atualizar); }, { passive: true });
+    window.addEventListener('resize', atualizar);
+    atualizar();
+  }
 
   if (!botao || !menu) return;
 

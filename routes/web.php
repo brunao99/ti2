@@ -32,6 +32,12 @@ Route::view('/', 'site.inicio')->name('inicio');
 Route::get('/webhook/whatsapp', [WhatsAppWebhookController::class, 'verificar'])->name('webhook.whatsapp.verificar');
 Route::post('/webhook/whatsapp', [WhatsAppWebhookController::class, 'receber'])->name('webhook.whatsapp.receber');
 
+// Imagem do alerta para o provedor de WhatsApp baixar: sem login, mas só com
+// o endereço assinado e com prazo que o próprio sistema gera no envio.
+Route::get('/alertas/imagem/{postagem}', [AlertaController::class, 'imagem'])
+    ->middleware('signed')
+    ->name('alertas.imagem');
+
 // ------------------------------------------------------------------- público
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'mostrarLogin'])->name('login');
@@ -92,6 +98,8 @@ Route::middleware(['auth', 'perfil:master,adm'])->group(function () {
         ->name('alertas.preview');
     Route::post('/alertas/publicacoes/{postagem}/disparar', [AlertaController::class, 'disparar'])
         ->name('alertas.disparar');
+    Route::get('/alertas/publicacoes/{postagem}/imagem', [AlertaController::class, 'imagem'])
+        ->name('alertas.imagem.previa');
     Route::get('/alertas/disparos/{disparo}', [AlertaController::class, 'show'])
         ->name('alertas.show');
     Route::post('/alertas/disparos/{disparo}/reenviar', [AlertaController::class, 'reenviar'])

@@ -49,9 +49,20 @@ class Postagem extends Model
     }
 
     protected $fillable = [
-        'tipo', 'titulo', 'texto', 'data_publicacao',
+        'tipo', 'titulo', 'texto', 'resumo_alerta', 'data_publicacao',
         'mes_referencia', 'situacao', 'alerta_enviado', 'user_id', 'link',
     ];
+
+    /**
+     * Texto do centro da imagem do alerta: o resumo escrito pela equipe ou,
+     * se ficou vazio, o começo do texto da publicação.
+     */
+    public function resumoParaAlerta(): string
+    {
+        $proprio = trim((string) $this->resumo_alerta);
+
+        return $proprio !== '' ? $proprio : \App\Support\ResumoAlerta::padrao($this->texto);
+    }
 
     /**
      * Classe CSS que pinta o título com a cor padrão do tipo.
