@@ -13,7 +13,18 @@
     window.addEventListener('scroll', marcar, { passive: true });
   }
 
-  // [PARTE 2 - Victor] mostrar ou esconder a senha
+  // Mostrar ou esconder a senha no acesso ao painel.
+  var verSenha = document.querySelector('[data-ver-senha]');
+  if (verSenha) {
+    verSenha.addEventListener('click', function () {
+      var campo = document.getElementById(verSenha.getAttribute('aria-controls'));
+      var mostrar = campo.type === 'password';
+      campo.type = mostrar ? 'text' : 'password';
+      verSenha.textContent = mostrar ? 'Ocultar' : 'Mostrar';
+      verSenha.setAttribute('aria-pressed', mostrar ? 'true' : 'false');
+      campo.focus();
+    });
+  }
 
   // [PARTE 3 - Gabriel] carrossel dos objetivos
 
