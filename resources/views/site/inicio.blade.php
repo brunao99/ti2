@@ -9,7 +9,32 @@
     $hoje = now('America/Sao_Paulo')->format('d/m/Y');
     $foto = fn (string $arquivo) => asset('assets/site/' . $arquivo);
 
-    // [PARTE 3 - Gabriel] lista dos objetivos
+    // Os objetivos e as imagens da página "Objetivos" do site atual.
+    // modo: "foto" preenche o quadro; "marca" mostra a imagem inteira sobre fundo claro.
+    $objetivos = [
+        ['Identificação dos programas em execução nos ministérios e seleção daqueles sintonizados com o perfil e as demandas do município.',
+            [['congresso.jpg', 'Congresso Nacional, em Brasília', 'foto']]],
+        ['Monitoramento e seleção dos editais publicados nos ministérios.',
+            [['programas.jpg', 'Cartaz de edital publicado por ministério', 'marca']]],
+        ['Identificação de fontes de financiamento para o município junto à CAIXA, ao BNDES e ao Banco do Brasil.',
+            [['caixa.jpg', 'Marca da CAIXA', 'marca'], ['bndes.jpg', 'Marca do BNDES', 'marca'], ['bancobrasil.jpg', 'Marca do Banco do Brasil', 'marca']]],
+        ['Monitoramento de programas e ações da administração direta e indireta do Governo do Estado de Minas Gerais.',
+            [['minas-gerais.jpg', 'Cidade Administrativa do Governo de Minas Gerais', 'foto']]],
+        ['Pesquisas que identificam boas práticas governamentais e projetos inovadores nas administrações municipais do país.',
+            [['predio-publico.jpg', 'Prédio público histórico em cidade do interior do Brasil', 'foto']]],
+        ['Identificação de parcerias com a iniciativa privada e o terceiro setor para eventos e projetos sociais.',
+            [['festival.jpg', 'Dançarina em festa cultural de rua', 'foto'], ['futebol.jpg', 'Crianças jogando futebol', 'foto']]],
+        ['Monitoramento das mídias digitais de gestores municipais bem avaliados, identificando novos conteúdos e estilos de postagem.',
+            [['celular.jpg', 'Celular com aplicativos de redes sociais', 'foto']]],
+        ['Identificação de programas de entidades que premiam gestores públicos por iniciativas inovadoras.',
+            [['trofeu.jpg', 'Troféu de premiação', 'foto']]],
+        ['Monitoramento dos índices municipais e indicadores da gestão pública (IDH, IDEB, FGV), comparados aos municípios do entorno e às médias do estado e do país.',
+            [['indicadores.svg', 'Gráfico ilustrativo: indicador do município comparado às médias da região e do estado', 'foto']]],
+        ['Acompanhamento da agenda de seminários e eventos nacionais sobre eficiência e inovação na gestão pública.',
+            [['seminario.jpg', 'Plateia em auditório durante um seminário', 'foto']]],
+        ['Monitoramento das pautas municipalistas, notas técnicas e boletins da Confederação Nacional de Municípios e da Associação Mineira de Municípios.',
+            [['reuniao.jpg', 'Reunião de trabalho', 'foto']]],
+    ];
 @endphp
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -132,7 +157,46 @@
     <li><img src="{{ $foto('faixa-sao-joao-del-rei-igreja.jpg') }}" width="900" height="750" loading="lazy" alt="Fachada barroca de igreja em São João del-Rei (MG)"></li>
   </ul>
 
-  {{-- [PARTE 3 - Gabriel] objetivos --}}
+  {{-- ========================================================= objetivos --}}
+  <section class="secao secao-nevoa" id="objetivos" aria-labelledby="objetivos-titulo">
+    <div class="wrap">
+      <div class="cabeca">
+        <h2 id="objetivos-titulo">Objetivos</h2>
+        <p class="lide">
+          Realizar pesquisas e monitoramentos permanentes das pautas de interesse do município, reunindo em um
+          único ambiente digital informações úteis e práticas, capazes de contribuir com o êxito da gestão pública
+          e com a prospecção do chefe do Poder Executivo municipal.
+        </p>
+      </div>
+
+      <div class="carrossel" data-carrossel>
+        <div class="carrossel-controles">
+          <p class="carrossel-contagem" aria-live="polite" data-carrossel-contagem></p>
+          <button type="button" class="carrossel-botao" data-carrossel-anterior aria-label="Objetivos anteriores">@include('site._icone', ['nome' => 'esquerda'])</button>
+          <button type="button" class="carrossel-botao" data-carrossel-proximo aria-label="Próximos objetivos">@include('site._icone', ['nome' => 'direita'])</button>
+        </div>
+      <ul class="objetivos" data-carrossel-trilho tabindex="0" role="region" aria-roledescription="carrossel" aria-label="Objetivos (role para os lados)">
+        @foreach ($objetivos as [$texto, $imagens])
+          <li class="objetivo">
+            <div @class(['objetivo-img', 'varias' => count($imagens) > 1, 'marcas' => $imagens[0][2] === 'marca'])>
+              @foreach ($imagens as [$arquivo, $alt, $modo])
+                <img class="{{ $modo }}" src="{{ $foto('objetivos/' . $arquivo) }}" alt="{{ $alt }}" loading="lazy">
+              @endforeach
+            </div>
+            <p>{{ $texto }}</p>
+          </li>
+        @endforeach
+        <li class="objetivo objetivo-chamada">
+          <h3>Quer isso para o seu município?</h3>
+          <p>Conte o que a prefeitura precisa e veja como o monitoramento funciona na prática.</p>
+          <a class="botao botao-claro" href="{{ $whatsapp }}" target="_blank" rel="noopener">
+            @include('site._icone', ['nome' => 'whatsapp']) Falar no WhatsApp
+          </a>
+        </li>
+      </ul>
+      </div>
+    </div>
+  </section>
 
   {{-- [PARTE 4 - Lucas] como funciona e sobre --}}
 </main>
