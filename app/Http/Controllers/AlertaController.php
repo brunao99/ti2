@@ -199,6 +199,13 @@ class AlertaController extends Controller
      * Imagem do alerta desta publicação. Serve a prévia do painel (com login)
      * e o endereço assinado que o provedor de WhatsApp baixa na hora do envio.
      */
+    public function imagemPublica(Postagem $postagem, string $token, ImagemAlerta $imagem): Response
+    {
+        abort_unless(hash_equals(ImagemAlerta::token($postagem), $token), 403);
+
+        return $this->imagem($postagem, $imagem);
+    }
+
     public function imagem(Postagem $postagem, ImagemAlerta $imagem): Response
     {
         return response($imagem->gerar($postagem), 200, [

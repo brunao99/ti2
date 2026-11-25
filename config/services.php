@@ -57,6 +57,10 @@ return [
         'account_sid'   => env('TWILIO_ACCOUNT_SID'),
         'auth_token'    => env('TWILIO_AUTH_TOKEN'),
         'whatsapp_from' => env('TWILIO_WHATSAPP_FROM', 'whatsapp:+14155238886'),
+        // Modelos do Content Template Builder (HX...). Com eles, o envio vai
+        // por modelo, como a conta de teste exige; sem eles, vai texto livre.
+        'content_sid' => env('TWILIO_CONTENT_SID'),
+        'content_sid_imagem' => env('TWILIO_CONTENT_SID_IMAGEM'),
     ],
 
     'slack' => [

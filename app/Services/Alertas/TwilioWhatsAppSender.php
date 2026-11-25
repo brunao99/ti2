@@ -28,6 +28,7 @@ class TwilioWhatsAppSender implements AlertSender
         63007 => 'O número de origem não é um canal de WhatsApp do Twilio.',
         63015 => 'Este número ainda não entrou no sandbox do Twilio (mande "join <código>" para o número do sandbox).',
         63016 => 'Fora da janela de 24 horas: mande uma mensagem para o sandbox e tente de novo.',
+        21654 => 'Esta conta só envia por modelo de mensagem: configure TWILIO_CONTENT_SID.',
     ];
 
     public function send(string $telefone, string $mensagem, array $parametros = [], ?string $imagem = null): array
@@ -52,13 +53,7 @@ class TwilioWhatsAppSender implements AlertSender
                 ->asForm()
                 ->acceptJson()
                 ->timeout(15)
-                ->post($url, array_filter([
-                    'From' => $this->enderecoWhatsApp($cfg['whatsapp_from']),
-                    'To' => $this->enderecoWhatsApp($telefone),
-                    'Body' => $mensagem,
-                    // Com imagem, o texto do alerta vira a legenda dela.
-                    'MediaUrl' => $imagem,
-                ]));
+                ->post($url, $this->corpo($cfg, $telefone, $mensagem, $parametros, $imagem));
         } catch (ConnectionException $e) {
             Log::warning('WhatsApp (Twilio): sem conexão', ['erro' => $e->getMessage()]);
 
@@ -89,6 +84,41 @@ class TwilioWhatsAppSender implements AlertSender
         ]);
 
         return $this->falha($codigo, $detalhe);
+    }
+
+    /**
+     * Com modelo do Twilio configurado (TWILIO_CONTENT_SID), manda o modelo e
+     * as variáveis {{1}} título, {{2}} tipo e {{3}} data; no modelo com
+     * imagem (TWILIO_CONTENT_SID_IMAGEM), {{4}} é o caminho da imagem.
+     * Sem modelo, manda o texto livre (e a imagem, se houver).
+     */
+    private function corpo(array $cfg, string $telefone, string $mensagem, array $parametros, ?string $imagem): array
+    {
+        $base = [
+            'From' => $this->enderecoWhatsApp($cfg['whatsapp_from']),
+            'To' => $this->enderecoWhatsApp($telefone),
+        ];
+
+        $comImagem = $imagem && filled($cfg['content_sid_imagem'] ?? null);
+        $modelo = $comImagem ? $cfg['content_sid_imagem'] : ($cfg['content_sid'] ?? null);
+
+        if (blank($modelo)) {
+            // Texto livre; com imagem, o texto do alerta vira a legenda dela.
+            return $base + array_filter(['Body' => $mensagem, 'MediaUrl' => $imagem]);
+        }
+
+        $variaveis = [];
+        foreach (array_values($parametros) as $i => $valor) {
+            $variaveis[(string) ($i + 1)] = trim(preg_replace('/\s+/u', ' ', (string) $valor));
+        }
+        if ($comImagem) {
+            $variaveis['4'] = ltrim((string) parse_url($imagem, PHP_URL_PATH), '/');
+        }
+
+        return $base + [
+            'ContentSid' => $modelo,
+            'ContentVariables' => json_encode($variaveis, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+        ];
     }
 
     /** "5531999990001" ou "+5531..." vira "whatsapp:+5531...". */
