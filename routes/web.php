@@ -22,9 +22,9 @@ use Illuminate\Support\Facades\Route;
 |   Master  → tudo
 */
 
-// A raiz leva cada um ao seu lugar. Um redirect fixo para /login criava um
-// loop para quem já estava logado: /login devolvia a pessoa para a raiz.
-Route::get('/', fn () => redirect()->route(auth()->check() ? 'painel.inicio' : 'login'));
+// Página inicial pública (landing page) da Algoritmos e Dados. Quem já
+// entrou vê o botão "Abrir o painel"; o login continua em /login.
+Route::view('/', 'site.inicio')->name('inicio');
 
 // ------------------------------------------------- webhook da Meta (WhatsApp)
 // Sem login e fora do CSRF (bootstrap/app.php): quem chama é a Meta. O GET é
