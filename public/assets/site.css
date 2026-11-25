@@ -216,7 +216,87 @@ h3{font-size:1.25rem;line-height:1.3;letter-spacing:-.01em}
   .carrossel-controles{margin-top:-16px}
 }
 
-/* [PARTE 4 - Lucas] como funciona, sobre, contato e rodapé */
+/* -------------------------------------------------------- como funciona */
+.divisao{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:24px;align-items:start}
+.passos{grid-column:1 / span 5;counter-reset:passo;display:grid;gap:2rem}
+.passos li{counter-increment:passo;display:grid;grid-template-columns:2.75rem 1fr;column-gap:.75rem}
+.passos li::before{content:counter(passo);grid-row:span 2;width:2.25rem;height:2.25rem;border-radius:50%;border:1px solid rgba(217,162,58,.6);
+  display:grid;place-items:center;font-size:1rem;color:var(--ocre);font-variant-numeric:tabular-nums}
+.passos p{color:var(--sobre-escuro);margin-top:.35rem;max-width:44ch}
+.demonstracao{grid-column:7 / span 6;position:relative;padding-bottom:170px}
+.janela{background:#fff;color:var(--tinta);border-radius:12px;overflow:hidden;box-shadow:0 30px 60px -30px rgba(0,0,0,.55)}
+.janela-barra{display:flex;align-items:center;gap:12px;height:40px;padding:0 14px;background:#f2f4f7;
+  border-bottom:1px solid var(--linha);font-size:.8125rem;color:var(--apoio)}
+.janela-pontos{display:flex;gap:6px}
+.janela-pontos i{width:10px;height:10px;border-radius:50%;background:#cfd6de}
+.janela-corpo{padding:22px 24px 26px}
+.janela-tipo{font-size:1.125rem;font-weight:500;letter-spacing:-.01em;padding-bottom:14px;border-bottom:1px solid var(--linha)}
+.janela-mes{margin-top:18px;font-size:.8125rem;color:var(--apoio)}
+.janela-lista li{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:14px;margin-top:8px;
+  padding:11px 14px;border-radius:4px;background:#fafbfc;box-shadow:inset 3px 0 0 #c0392b;font-size:.9375rem}
+.j-titulo{min-width:0}
+.j-data{color:var(--apoio);font-size:.875rem;font-variant-numeric:tabular-nums}
+.j-selo{font-size:.75rem;font-weight:500;padding:.25rem .55rem;border-radius:3px;background:#e3f1e6;color:#2f6b3f;white-space:nowrap}
+.j-enviado{background:#e6eefa;color:#1d4f86}
+.alerta{position:absolute;left:-48px;bottom:0;width:min(360px,80%);background:#fff;color:var(--tinta);
+  border-radius:14px;padding:14px 16px 12px;box-shadow:0 2px 6px rgba(14,36,56,.15),0 24px 48px -20px rgba(0,0,0,.6)}
+.alerta-topo{display:flex;align-items:center;gap:10px;margin-bottom:10px;line-height:1.2}
+.alerta-topo b{display:block;font-size:.9375rem;font-weight:500}
+.alerta-topo small{font-size:.8125rem;color:var(--apoio)}
+.alerta-avatar{width:36px;height:36px;border-radius:50%;background:var(--marinho);display:grid;place-items:center;flex:none}
+.alerta-avatar .wifi{width:18px;height:14px;color:var(--ocre)}
+.alerta-msg{position:relative;background:#e9f6e4;border-radius:4px 10px 10px 10px;padding:10px 12px 22px;font-size:.9375rem;line-height:1.45}
+.alerta-msg b{font-weight:500}
+.alerta-hora{position:absolute;right:10px;bottom:5px;font-size:.75rem;color:#5c6b5a;display:inline-flex;align-items:center;gap:4px}
+.vistos .icone{width:17px;height:11px;color:#34b7f1;display:block}
+
+/* ---------------------------------------------------------------- sobre */
+.sobre-grade{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:24px;align-items:center}
+.sobre-grade>div{grid-column:1 / span 6}
+.sobre-grade .lide{margin-top:1.25rem}
+.frase{margin-top:2rem;font-size:clamp(1.5rem,1rem + 1.4vw,2.125rem);line-height:1.2;letter-spacing:-.02em;color:var(--marinho);text-wrap:balance}
+.sobre-foto{grid-column:7 / span 6;border-radius:12px;overflow:hidden;aspect-ratio:15 / 8;background:var(--nevoa);box-shadow:var(--sombra)}
+.sobre-foto img{width:100%;height:100%;object-fit:cover}
+
+/* ----------------------------------------------------- contato e rodapé */
+.fechamento{background:var(--marinho-fundo);color:#fff;padding-bottom:56px}
+.fechamento-in{display:flex;flex-direction:column;gap:96px}
+.contato .lide{margin-top:1.25rem;color:var(--sobre-escuro)}
+.contato .acoes{margin-top:2.25rem}
+.contato-dados{display:flex;flex-wrap:wrap;gap:24px 64px;margin-top:3rem}
+.contato-dados dt{font-size:.875rem;color:var(--sobre-escuro)}
+.contato-dados dd{font-size:1.25rem;margin-top:.25rem}
+.contato-dados a,.rodape-links a{text-decoration:none;background:linear-gradient(currentColor,currentColor) 0 100%/0 1px no-repeat;transition:background-size .25s var(--sai)}
+.contato-dados a:hover,.rodape-links a:hover{background-size:100% 1px}
+.rodape{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));column-gap:24px;row-gap:20px;align-items:end;
+  padding-top:40px;border-top:1px solid rgba(255,255,255,.12)}
+.rodape .marca{grid-column:1 / span 6}
+.rodape .marca-nome{font-size:clamp(1.75rem,1rem + 2vw,2.5rem)}
+.rodape .marca .wifi{width:34px;height:26px;transform:translateY(-6px)}
+.rodape-links{grid-column:7 / span 6;display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:flex-end}
+.rodape-links a{color:#fff;padding:.3rem 0}
+.rodape-legal{grid-column:1 / -1;font-size:.875rem;color:var(--sobre-escuro)}
+
+/* como funciona, sobre e contato: tablet e celular */
+@media (max-width:900px){
+  .passos,.demonstracao,.sobre-grade>div,.sobre-foto{grid-column:1 / -1}
+  .demonstracao{margin-top:48px}
+  .alerta{left:24px}
+  .sobre-foto{margin-top:40px}
+  .rodape .marca,.rodape-links{grid-column:1 / -1}
+  .rodape-links{justify-content:flex-start}
+}
+@media (max-width:639px){
+  .divisao,.sobre-grade,.rodape{column-gap:12px}
+  .demonstracao{padding-bottom:0}
+  .alerta{position:relative;left:auto;bottom:auto;width:auto;margin:-40px 12px 0}
+  .janela-corpo{padding:18px 16px 20px}
+  .janela-lista li{grid-template-columns:1fr auto;row-gap:6px}
+  .janela-lista .j-selo{grid-column:1 / -1;justify-self:start}
+  .contato-dados{gap:20px}
+  .contato-dados dd{font-size:1.125rem;overflow-wrap:anywhere}
+  .fechamento-in{gap:72px}
+}
 
 /* --------------------------------------------- celular: topo e menu */
 @media (max-width:860px){

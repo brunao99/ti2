@@ -198,10 +198,133 @@
     </div>
   </section>
 
-  {{-- [PARTE 4 - Lucas] como funciona e sobre --}}
+  {{-- ===================================================== como funciona --}}
+  <section class="secao secao-marinho" id="como-funciona" aria-labelledby="como-titulo">
+    <div class="wrap">
+      <div class="cabeca">
+        <h2 id="como-titulo">Como a informação chega até a prefeitura</h2>
+      </div>
+
+      <div class="divisao">
+        <ol class="passos">
+          <li>
+            <h3>Pesquisa e seleção</h3>
+            <p>A equipe acompanha ministérios, governo do estado, bancos públicos e entidades municipalistas e separa o que combina com o município.</p>
+          </li>
+          <li>
+            <h3>Painel do prefeito</h3>
+            <p>Todo esse conteúdo fica sempre atualizado em um painel de controle. O prefeito recebe login e senha de acesso.</p>
+          </li>
+          <li>
+            <h3>Alerta no WhatsApp</h3>
+            <p>Cada novidade chega como mensagem de alerta no WhatsApp do prefeito.</p>
+          </li>
+          <li>
+            <h3>Reuniões periódicas</h3>
+            <p>Para aprimorar a busca e o envio das informações e avaliar a efetividade do uso dos dados coletados.</p>
+          </li>
+        </ol>
+
+        <div class="demonstracao">
+          {{-- O painel como ele é: listagem de um tipo, com a faixa na cor do tipo. --}}
+          <div class="janela" aria-label="Exemplo da listagem de publicações do painel">
+            <div class="janela-barra">
+              <span class="janela-pontos" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span>Painel · exemplo</span>
+            </div>
+            <div class="janela-corpo">
+              <p class="janela-tipo">Ministérios e autarquias — Editais</p>
+              <p class="janela-mes">Novembro de 2026</p>
+              <ul class="janela-lista">
+                <li>
+                  <span class="j-titulo">Edital de chamamento público 012/2026</span>
+                  <span class="j-data">{{ $hoje }}</span>
+                  <span class="j-selo j-enviado">Alerta enviado</span>
+                </li>
+                <li>
+                  <span class="j-titulo">Seleção de propostas para equipamentos de saúde</span>
+                  <span class="j-data">12/11/2026</span>
+                  <span class="j-selo j-enviado">Alerta enviado</span>
+                </li>
+                <li>
+                  <span class="j-titulo">Chamada pública para projetos de esporte e lazer</span>
+                  <span class="j-data">05/11/2026</span>
+                  <span class="j-selo">Publicado</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {{-- O alerta usa o texto do modelo de mensagem do painel. --}}
+          <div class="alerta" aria-label="Exemplo de alerta enviado pelo WhatsApp">
+            <div class="alerta-topo">
+              <span class="alerta-avatar" aria-hidden="true">@include('layouts.logo')</span>
+              <span><b>Algoritmos e Dados</b><small>Exemplo de alerta</small></span>
+            </div>
+            <p class="alerta-msg">
+              Olá! Foi publicada uma nova informação no Portal Algoritmos e Dados:
+              <b>Edital de chamamento público 012/2026</b> (Ministérios e autarquias — Editais),
+              publicada em {{ $hoje }}.
+              <span class="alerta-hora">09:12 <span class="vistos" aria-label="lida">@include('site._icone', ['nome' => 'vistos'])</span></span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {{-- ============================================================== sobre --}}
+  <section class="secao" id="sobre" aria-labelledby="sobre-titulo">
+    <div class="wrap sobre-grade">
+      <div>
+        <h2 id="sobre-titulo">Sobre a Algoritmos e Dados</h2>
+        <p class="lide">
+          Somos uma consultoria à gestão pública e empresarial. Pesquisamos e monitoramos as pautas de interesse
+          do município e reunimos, em um único ambiente digital, informações úteis e práticas para o êxito da
+          gestão e para a prospecção do chefe do Poder Executivo municipal.
+        </p>
+        <p class="frase">É preciso ficar antenado para não deixar as oportunidades passarem.</p>
+      </div>
+      <figure class="sobre-foto">
+        <img src="{{ $foto('sobre-tiradentes.jpg') }}" width="1400" height="747" loading="lazy" alt="Torres de igreja colonial em Tiradentes (MG)">
+      </figure>
+    </div>
+  </section>
 </main>
 
-{{-- [PARTE 4 - Lucas] contato e rodapé --}}
+{{-- ============================================== contato e rodapé --}}
+<footer class="secao fechamento" id="contato" aria-labelledby="contato-titulo">
+  <div class="wrap fechamento-in">
+    <div class="contato">
+      <h2 id="contato-titulo">Fale com a consultoria</h2>
+      <p class="lide">Conte o que o seu município precisa. A conversa começa pelo WhatsApp ou por e-mail.</p>
+      <div class="acoes">
+        <a class="botao botao-claro" href="{{ $whatsapp }}" target="_blank" rel="noopener">
+          @include('site._icone', ['nome' => 'whatsapp']) Falar no WhatsApp
+        </a>
+        <a class="botao botao-linha-clara" href="mailto:{{ $email }}">Enviar e-mail</a>
+      </div>
+      <dl class="contato-dados">
+        <div><dt>WhatsApp e telefone</dt><dd><a href="tel:+5531984294085">{{ $telefone }}</a></dd></div>
+        <div><dt>E-mail</dt><dd><a href="mailto:{{ $email }}">{{ $email }}</a></dd></div>
+      </dl>
+    </div>
+
+    <div class="rodape">
+      <a class="marca marca-clara" href="#inicio" aria-label="Algoritmos e Dados, voltar ao início">
+        <span class="marca-nome">Algoritmos e Dados</span>
+        @include('layouts.logo')
+      </a>
+      <nav class="rodape-links" aria-label="Rodapé">
+        <a href="#objetivos">Objetivos</a>
+        <a href="#como-funciona">Como funciona</a>
+        <a href="#sobre">Sobre</a>
+        <a href="{{ $usuario ? route('painel.inicio') : '#acesso' }}">{{ $usuario ? 'Abrir o painel' : 'Acessar o painel' }}</a>
+      </nav>
+      <p class="rodape-legal">© {{ date('Y') }} Algoritmos e Dados · Consultoria à Gestão Pública e Empresarial · Fotos de cidades e de temas: Unsplash</p>
+    </div>
+  </div>
+</footer>
 
 </body>
 </html>
